@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}My Farm — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">{{ t('farm_title', 'My Farm Profile & Telemetry') }}</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">{{ t('farm_subtitle', 'Update farm parameters and log daily crop readings.') }}</p>
+      </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); align-items: start; gap: var(--space-xl);">
+      
+      <!-- Column 1: Profile Configuration -->
+      <div style="display:flex; flex-direction:column; gap: var(--space-xl);">
+        <div class="card-no-hover">
+          <h3 style="color: var(--deep-forest); margin-bottom: var(--space-md);">🌾 {{ t('farm_crop_settings', 'Farm & Crop Settings') }}</h3>
+          <form method="POST" action="{{ url_for('farm.farm') }}">
+            <div class="form-fields" style="display:flex; flex-direction:column; gap:12px;">
+              <div class="input-group">
+                <label>{{ t('farm_name', 'Farm Name') }}</label>
+                <input type="text" name="farm_name" class="input-field" value="{{ farm.name if farm else '' }}" placeholder="e.g. Green Valley Farm" required />
+              </div>
+              <div class="input-group">
+                <label>{{ t('farm_location', 'Location / City') }}</label>
+                <input type="text" name="location" class="input-field" value="{{ farm.location if farm else '' }}" placeholder="e.g. Punjab, India" required />
+              </div>
+              <div class="input-group">
+                <label>{{ t('farm_area', 'Farm Area (acres)') }}</label>
+                <input type="number" step="0.1" name="area" class="input-field" value="{{ farm.area if farm else '' }}" placeholder="e.g. 120" required />
+              </div>
+              
+              <div class="input-group">
+                <label>{{ t('farm_soil_type', 'Soil Type') }}</label>
+                <select name="soil_type" class="input-field" style="height:44px; padding:0 12px;">
+                  <option value="Loam" {% if farm and farm.soil_type == 'Loam' %}selected{% endif %}>Loam</option>
+                  <option value="Clay" {% if farm and farm.soil_type == 'Clay' %}selected{% endif %}>Clay</option>
+                  <option value="Sandy" {% if farm and farm.soil_type == 'Sandy' %}selected{% endif %}>Sandy</option>
+                  <option value="Silt" {% if farm and farm.soil_type == 'Silt' %}selected{% endif %}>Silt</option>
+                </select>
+              </div>
+ 
+              <div class="input-group">
+                <label>{{ t('farm_irrigation', 'Irrigation System Type') }}</label>
+                <select name="irrigation_method" class="input-field" style="height:44px; padding:0 12px;">
+                  <option value="Drip" {% if farm and farm.irrigation_method == 'Drip' %}selected{% endif %}>Drip Irrigation</option>
+                  <option value="Sprinkler" {% if farm and farm.irrigation_method == 'Sprinkler' %}selected{% endif %}>Sprinklers</option>
+                  <option value="Flood" {% if farm and farm.irrigation_method == 'Flood' %}selected{% endif %}>Flood/Furrow Irrigation</option>
+                </select>
+              </div>
+ 
+              <h4 style="margin-top:14px; border-top:1px solid rgba(0,0,0,0.06); padding-top:14px; color:var(--deep-forest);">{{ t('farm_crop_section', 'Active Crop Registration') }}</h4>
+              
+              <div class="input-group">
+                <label>{{ t('farm_crop_name', 'Crop Name') }}</label>
+                <input type="text" name="crop_name" class="input-field" value="{{ crop.name if crop else '' }}" placeholder="e.g. Wheat" required />
+              </div>
+              <div class="input-group">
+                <label>{{ t('farm_variety', 'Variety') }}</label>
+                <input type="text" name="variety" class="input-field" value="{{ crop.variety if crop else '' }}" placeholder="e.g. HD-2967" />
+              </div>
+              <div class="input-group">
+                <label>{{ t('farm_planting_date', 'Planting Date') }}</label>
+                <input type="date" name="planting_date" class="input-field" value="{{ crop.planting_date if crop else '' }}" required />
+              </div>
+              
+              <div class="input-group">
+                <label>{{ t('farm_growth_stage', 'Growth Stage') }}</label>
+                <select name="stage" class="input-field" style="height:44px; padding:0 12px;">
+                  <option value="Germination" {% if crop and crop.stage == 'Germination' %}selected{% endif %}>Germination</option>
+                  <option value="Vegetative" {% if crop and crop.stage == 'Vegetative' %}selected{% endif %}>Vegetative Stage</option>
+                  <option value="Flowering" {% if crop and crop.stage == 'Flowering' %}selected{% endif %}>Flowering Stage</option>
+                  <option value="Pod Fill" {% if crop and crop.stage == 'Pod Fill' %}selected{% endif %}>Pod Fill / Grain Development</option>
+                  <option value="Maturity" {% if crop and crop.stage == 'Maturity' %}selected{% endif %}>Maturity/Ready to Harvest</option>
+                </select>
+              </div>
+ 
+              <button type="submit" class="btn btn-primary" style="margin-top:10px;">💾 {{ t('btn_save_profile', 'Save Profile Settings') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Column 2: Recent Readings & Onboarding -->
+      <div style="display:flex; flex-direction:column; gap: var(--space-xl);">
+        {% if farm %}
+
+        <!-- Fertilizer Usage Card -->
+        <div class="card-no-hover">
+          <h3 style="color: var(--deep-forest); margin-bottom: 4px;">🧪 Current Fertilizer Usage</h3>
+          <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">
+            Select the fertilizers you are currently using and enter the dose (kg/ha). Agents will use this to personalize their analysis.
+          </p>
+          <form method="POST" action="{{ url_for('farm.save_fertilizers') }}">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+              {% for fert in fertilizer_list %}
+                        {% set fkey = 'fert_' + fert.replace(' ', '_').replace('/', '_') %}
+                        {% set dkey = 'dose_' + fert.replace(' ', '_').replace('/', '_') %}
+                        {% set unit_key = 'unit_' + fert.replace(' ', '_').replace('/', '_') %}
+                        {% set saved = fertilizer_data.fertilizers.get(fert, {}) %}
+                        {% set saved_value = saved.value if saved else '' %}
+                        {% set saved_unit = saved.unit if saved else 'kg' %}
+                        {% set is_checked = fert in fertilizer_data.fertilizers %}
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+                                    background: var(--bg); border-radius: 10px;
+                                    border: 1.5px solid {% if is_checked %}rgba(111,175,123,0.4){% else %}transparent{% endif %};">
+                          <input type="checkbox" name="{{ fkey }}" id="{{ fkey }}" value="1"
+                                 {% if is_checked %}checked{% endif %}
+                                 style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer; flex-shrink:0;"
+                                 onchange="toggleDose(this, '{{ dkey }}', '{{ unit_key }}')">
+                          <label for="{{ fkey }}"
+                                 style="flex:1; font-size:13px; font-weight:600; color:var(--deep-forest); cursor:pointer;">
+                            {{ fert }}
+                          </label>
+                          <input type="number" name="{{ dkey }}" id="{{ dkey }}"
+                                 placeholder="Enter value" step="0.1" min="0" max="9999"
+                                 value="{{ saved_value }}"
+                                 {% if not is_checked %}disabled{% endif %}
+                                 style="width: 80px; padding: 5px 8px; border-radius: 8px; font-size: 12px;
+                                        border: 1.5px solid rgba(111,175,123,0.3); background: var(--surface);
+                                        color: var(--text); text-align: right;
+                                        {% if not is_checked %}opacity:0.4;{% endif %}"></input>
+                          <select name="{{ unit_key }}" id="{{ unit_key }}"
+                                  {% if not is_checked %}disabled{% endif %}
+                                  style="padding:4px 6px; border-radius:6px; border:1.5px solid rgba(111,175,123,0.3); background: var(--surface); color: var(--text);">
+                            <option value="kg" {% if saved_unit == 'kg' %}selected{% endif %}>kg/ha</option>
+                            <option value="%" {% if saved_unit == '%' %}selected{% endif %}>%</option>
+                          </select>
+                        </div>
+              {% endfor %}
+            </div>
+
+            <div class="input-group" style="margin-bottom: 12px;">
+              <label style="font-size: 12px; color: var(--text-secondary);">Additional Notes (optional)</label>
+              <input type="text" name="fertilizer_notes" class="input-field"
+                     placeholder="e.g. Applied Urea after last rainfall"
+                     value="{{ fertilizer_data.notes }}" />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              💾 Save Fertilizer Usage
+            </button>
+          </form>
+        </div>
+
+        <!-- Historical readings list -->
+        <div class="card-no-hover">
+          <h3 style="color: var(--deep-forest); margin-bottom: 12px;">{{ t('farm_recent_readings', 'Recent Readings') }}</h3>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            {% for obs in observations %}
+            <div style="padding:10px; background:var(--bg); border-radius:10px; font-size:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-weight:600;">
+                <span>{{ t('farm_observed_at', 'Observed at') }}: {{ obs.observed_at|safe_date }}</span>
+                <span class="badge badge-green">{{ t('farm_health', 'Health') }}: {{ obs.crop_health }}%</span>
+              </div>
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; color:var(--text-secondary);">
+                <span>{{ t('farm_moisture', 'Moisture') }}: {{ obs.soil_moisture }}%</span>
+                <span>pH: {{ obs.soil_ph }}</span>
+                <span>N-P-K: {{ obs.nitrogen }}-{{ obs.phosphorus }}-{{ obs.potassium }}</span>
+                <span>Temp: {{ obs.temperature }}°C</span>
+                <span>Price: ₹{{ obs.market_price }}</span>
+              </div>
+            </div>
+            {% else %}
+            <p style="color:var(--text-secondary); font-size:13px; text-align:center;">{{ t('farm_no_obs', 'No observation history logged yet.') }}</p>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <!-- Onboarding illustration beside the farm settings form -->
+        <div class="card-no-hover" style="overflow: hidden; padding: 0;">
+          <img src="{{ url_for('static', filename='images/dashboard-farm.png') }}" alt="Autonomous Smart Farm" style="width: 100%; height: 320px; object-fit: cover;" />
+          <div style="padding: var(--space-lg);">
+            <h3 style="color: var(--deep-forest); margin-bottom: 8px;">{{ t('farm_setup_title', 'Let\'s Set Up Your Farm!') }}</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+              {{ t('farm_setup_desc', 'Enter your field details, crop variety, and planting date on the left to initialize. Once saved, our multi-agent AI system will start tracking soil pH, weather anomalies, crop disease diagnostics, and irrigation cycles automatically.') }}
+            </p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

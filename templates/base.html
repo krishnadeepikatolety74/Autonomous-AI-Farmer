@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AgriMitra AI — Your Intelligent Digital Farm Manager. Multi-agent AI technology for smart, sustainable farming." />
+  <title>{% block title %}AgriMitra AI{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+
+  {% block extra_css %}{% endblock %}
+  {% if g.user %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  {% endif %}
+</head>
+<body>
+  {% block body %}{% endblock %}
+
+  {% if g.user %}
+    {% include "components/chatbot.html" %}
+    {% include "components/agent_chat.html" %}
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/agent_chat.js') }}"></script>
+  {% endif %}
+
+  <!-- Flash Messages Toast -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-container" style="position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:400px;">
+      {% for category, message in messages %}
+      <div class="flash-toast flash-{{ category }}" style="
+        padding: 14px 22px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        animation: slideInRight 0.4s ease;
+        cursor: pointer;
+        {% if category == 'success' %}
+        background: #DDF3E2;
+        color: #285943;
+        border-left: 4px solid #6FAF7B;
+        {% elif category == 'error' %}
+        background: #FDE8E8;
+        color: #9B1C1C;
+        border-left: 4px solid #D97D7D;
+        {% else %}
+        background: #EAF7EC;
+        color: #285943;
+        border-left: 4px solid #6FAF7B;
+        {% endif %}
+      " onclick="this.remove()">
+        {% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    <script>
+      setTimeout(() => {
+        const container = document.getElementById('flash-container');
+        if (container) container.remove();
+      }, 5000);
+    </script>
+    {% endif %}
+  {% endwith %}
+
+  <script>
+    // Enable/disable dose input and unit selector when the fertilizer checkbox changes
+    function toggleDose(checkbox, doseId, unitId) {
+      const doseEl = document.getElementById(doseId);
+      const unitEl = document.getElementById(unitId);
+      if (!doseEl) return;
+      const enabled = checkbox.checked;
+      doseEl.disabled = !enabled;
+      if (unitEl) unitEl.disabled = !enabled;
+      // visual hint – dim when disabled
+      doseEl.style.opacity = enabled ? '' : '0.4';
+      if (unitEl) unitEl.style.opacity = enabled ? '' : '0.4';
+    }
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

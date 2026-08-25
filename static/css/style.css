@@ -1,0 +1,9 @@
+/* ===========================================
+   MAIN STYLE SHEET — Imports Design System
+   =========================================== */
+
+@import 'variables.css';
+@import 'base.css';
+@import 'components.css';
+@import 'animations.css';
+@import 'responsive.css';

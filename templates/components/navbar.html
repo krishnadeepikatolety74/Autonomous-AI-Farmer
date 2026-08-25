@@ -1,0 +1,130 @@
+<nav class="navbar" id="main-navbar">
+  <a href="{{ url_for('home') }}" class="nav-logo">
+    <span class="logo-icon">🌿</span>
+    <span>AgriMitra AI</span>
+  </a>
+
+  <div class="nav-links">
+    <a href="#hero" class="nav-scroll-link">Home</a>
+    <a href="#about" class="nav-scroll-link">Overview</a>
+    <a href="#agents-section" class="nav-scroll-link">AI Agents</a>
+    <a href="#how-it-works" class="nav-scroll-link">How It Works</a>
+    <a href="#about" class="nav-scroll-link">About</a>
+  </div>
+
+  <div class="nav-right">
+    <div class="weather-badge" id="nav-weather-badge" style="opacity: 0; transition: opacity 0.3s ease;">
+      <span class="weather-icon" id="nav-weather-icon">☀️</span>
+      <div>
+        <div class="weather-temp" id="nav-weather-temp">--°C</div>
+        <div class="weather-desc" id="nav-weather-desc">Loading...</div>
+      </div>
+    </div>
+    <a href="{{ url_for('auth.signin') }}" class="btn btn-sm btn-outline">Sign In</a>
+    <a href="{{ url_for('auth.signup') }}" class="btn btn-sm btn-primary">Get Started</a>
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<script>
+  (function() {
+    const badge = document.getElementById('nav-weather-badge');
+    const iconEl = document.getElementById('nav-weather-icon');
+    const tempEl = document.getElementById('nav-weather-temp');
+    const descEl = document.getElementById('nav-weather-desc');
+
+    function getWeatherEmoji(code) {
+      if (code === 0) return '☀️';
+      if (code >= 1 && code <= 3) return '⛅';
+      if (code === 45 || code === 48) return '🌫️';
+      if (code >= 51 && code <= 55) return '🌧️';
+      if (code >= 61 && code <= 65) return '🌧️';
+      if (code >= 71 && code <= 75) return '❄️';
+      if (code >= 80 && code <= 82) return '🌦️';
+      if (code >= 95 && code <= 99) return '⛈️';
+      return '☀️';
+    }
+
+    async function loadNavbarWeather() {
+      // Check localStorage cache to avoid redundant hits (10 min cache)
+      const cacheKey = 'nav_weather_cache';
+      const cacheTimeKey = 'nav_weather_cache_time';
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTime = localStorage.getItem(cacheTimeKey);
+
+      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime, 10) < 600000)) {
+        try {
+          updateWeatherUI(JSON.parse(cachedData));
+          return;
+        } catch (e) {
+          // ignore cache error and fetch fresh
+        }
+      }
+
+      let url = '/api/weather';
+
+      // Check if geolocation is already granted
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const result = await navigator.permissions.query({ name: 'geolocation' });
+          if (result.state === 'granted') {
+            await new Promise((resolve) => {
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  url = `/api/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}`;
+                  resolve();
+                },
+                () => {
+                  resolve();
+                },
+                { timeout: 3000 }
+              );
+            });
+          }
+        } catch (e) {
+          // query not supported
+        }
+      }
+
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data.success && data.weather) {
+          localStorage.setItem(cacheKey, JSON.stringify(data.weather));
+          localStorage.setItem(cacheTimeKey, Date.now().toString());
+          updateWeatherUI(data.weather);
+        } else {
+          showErrorState();
+        }
+      } catch (e) {
+        showErrorState();
+      }
+    }
+
+    function updateWeatherUI(w) {
+      if (!badge || !iconEl || !tempEl || !descEl) return;
+      
+      const emoji = getWeatherEmoji(w.weather_code);
+      iconEl.textContent = emoji;
+      tempEl.textContent = `${Math.round(w.temperature_c)}°C`;
+      descEl.textContent = w.condition;
+      
+      badge.setAttribute('title', `Live weather at ${w.location}`);
+      badge.style.opacity = '1';
+    }
+
+    function showErrorState() {
+      if (!badge || !tempEl || !descEl) return;
+      tempEl.textContent = '--°C';
+      descEl.textContent = 'Weather';
+      badge.style.opacity = '0.7';
+    }
+
+    // Run on load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadNavbarWeather);
+    } else {
+      loadNavbarWeather();
+    }
+  })();
+</script>

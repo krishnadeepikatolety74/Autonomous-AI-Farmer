@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">{{ t('dash_title', 'Farm Intelligence Dashboard') }}</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">{{ t('dash_subtitle', 'Detailed multi-agent diagnostic analysis and historical log registry.') }}</p>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 12px;">
+        {% if farm %}
+        <form method="POST" action="{{ url_for('agents.run_all_agents') }}" style="margin: 0;">
+          <button type="submit" class="btn btn-primary">⚡ {{ t('btn_execute', 'Execute Agent Orchestration') }}</button>
+        </form>
+        {% endif %}
+        {% include "components/bell_notification.html" %}
+      </div>
+    </div>
+
+    {% if farm %}
+    <!-- Analysis Graphs -->
+    <div class="section" style="margin-bottom: var(--space-xl);">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('dash_sensors', 'Sensors & Telemetry Trends') }}</h3>
+      </div>
+      
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <!-- Soil Parameter Chart (Visualized with HTML/CSS) -->
+        <div class="card">
+          <h4 style="margin-bottom: 16px; color: var(--deep-forest);">{{ t('dash_nutrients', 'Nutrient Level Comparison (kg/ha)') }}</h4>
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 13px;">
+                <span>{{ t('dash_nitrogen', 'Nitrogen (N)') }}</span>
+                <strong>{{ observation.nitrogen if observation else 45 }} kg/ha</strong>
+              </div>
+              <div class="progress-bar" style="height: 12px;">
+                <div class="progress-fill" style="width: {{ ((observation.nitrogen if observation else 45) / 100 * 100)|round|int }}%; background: #6FAF7B;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 13px;">
+                <span>{{ t('dash_phosphorus', 'Phosphorus (P)') }}</span>
+                <strong>{{ observation.phosphorus if observation else 30 }} kg/ha</strong>
+              </div>
+              <div class="progress-bar" style="height: 12px;">
+                <div class="progress-fill" style="width: {{ ((observation.phosphorus if observation else 30) / 60 * 100)|round|int }}%; background: #E8B85C;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 4px; font-size: 13px;">
+                <span>{{ t('dash_potassium', 'Potassium (K)') }}</span>
+                <strong>{{ observation.potassium if observation else 120 }} kg/ha</strong>
+              </div>
+              <div class="progress-bar" style="height: 12px;">
+                <div class="progress-fill" style="width: {{ ((observation.potassium if observation else 120) / 200 * 100)|round|int }}%; background: #8CC8F2;"></div>
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 14px;">
+            ⚠️ Nitrogen values below target threshold of 60 kg/ha for optimal grain flowering.
+          </p>
+        </div>
+
+        <!-- Telemetry Parameters Matrix -->
+        <div class="card">
+          <h4 style="margin-bottom: 16px; color: var(--deep-forest);">{{ t('dash_realtime', 'Real-Time Sensor Feeds') }}</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+            <div style="padding: 12px; background: var(--bg); border-radius: 12px; text-align: center;">
+              <span style="font-size: 11px; color: var(--text-secondary);">{{ t('dash_soil_ph', 'Soil pH') }}</span>
+              <div style="font-size: 20px; font-weight: 700; color: var(--deep-forest); margin-top: 4px;">
+                {{ observation.soil_ph if observation else '6.5' }}
+              </div>
+            </div>
+            <div style="padding: 12px; background: var(--bg); border-radius: 12px; text-align: center;">
+              <span style="font-size: 11px; color: var(--text-secondary);">{{ t('dash_rainfall', 'Rainfall (mm)') }}</span>
+              <div style="font-size: 20px; font-weight: 700; color: var(--blue-weather); margin-top: 4px;">
+                {{ observation.rainfall if observation else '10' }} mm
+              </div>
+            </div>
+            <div style="padding: 12px; background: var(--bg); border-radius: 12px; text-align: center;">
+              <span style="font-size: 11px; color: var(--text-secondary);">{{ t('dash_crop_health', 'Crop Health Index') }}</span>
+              <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;">
+                {{ observation.crop_health if observation else '82' }}%
+              </div>
+            </div>
+            <div style="padding: 12px; background: var(--bg); border-radius: 12px; text-align: center;">
+              <span style="font-size: 11px; color: var(--text-secondary);">{{ t('dash_market_value', 'Market Value (INR/q)') }}</span>
+              <div style="font-size: 20px; font-weight: 700; color: var(--deep-forest); margin-top: 4px;">
+                ₹{{ observation.market_price if observation else '2,100' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Farm Quick Notes Widget -->
+        <div class="card">
+          <h4 style="margin-bottom: 16px; color: var(--deep-forest); display: flex; align-items: center; gap: 8px;">
+            📝 {{ t('quick_notes_title', 'Farm Quick Notes') }}
+          </h4>
+          
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px;">
+            <div>
+              {% if incomplete_notes %}
+              <ul style="list-style-type: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                {% for note in incomplete_notes %}
+                <li style="font-size: 13.5px; color: #333; display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #6FAF7B; font-weight: bold;">○</span>
+                  <span style="word-break: break-word;">{{ note.note }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div style="text-align: center; color: var(--text-secondary); font-size: 12.5px; padding: 20px 0;">
+                {{ t('dash_no_notes', 'No active farm notes. Add purchase items in Settings!') }}
+              </div>
+              {% endif %}
+            </div>
+
+            <div style="margin-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 12px; display: flex; justify-content: flex-end;">
+              <a href="{{ url_for('settings.settings') }}#quick-notes-container" class="btn btn-sm btn-outline" style="font-size: 11px;">
+                {{ t('btn_view_notes', 'View All Settings Notes') }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Execution Timeline Logs -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('dash_recent_runs', 'Recent Agent Execution Logs') }}</h3>
+        <a href="{{ url_for('memory.activity_list') }}" class="btn btn-sm btn-outline">{{ t('btn_activity_logs', 'Activity Logs') }}</a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+        {% for run in recent_runs %}
+        <div class="card-no-hover" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="color:var(--deep-forest);">{{ run.agent_name }}</strong>
+              <span class="badge {% if run.status == 'Completed' %}badge-green{% else %}badge-red{% endif %}">{{ run.status }}</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-secondary);">{{ run.run_time }}</span>
+          </div>
+          {% if run.parsed_output %}
+          <div style="font-size: 13px; background: var(--bg); padding: 12px; border-radius: 8px;">
+            <p><strong>{{ t('dash_diagnosis', 'Diagnosis') }}:</strong> {{ run.parsed_output.summary or run.parsed_output.final_plan }}</p>
+            {% if run.parsed_output.recommendation %}
+            <p style="margin-top:4px;"><strong>{{ t('dash_recommendation', 'Recommendation') }}:</strong> {{ run.parsed_output.recommendation }}</p>
+            {% endif %}
+            <div style="display:flex; gap:10px; margin-top:6px; font-size:11px; color:var(--text-secondary);">
+              <span>{{ t('dash_confidence', 'Confidence') }}: {{ run.parsed_output.confidence }}%</span>
+              <span>•</span>
+              <span>{{ t('dash_risk', 'Risk') }}: {{ run.parsed_output.risk_level or run.parsed_output.overall_risk }}</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="card-no-hover" style="text-align:center; padding: 32px;">
+          <p style="color: var(--text-secondary);">{{ t('dash_no_runs', 'No execution runs logged. Trigger orchestration above.') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    {% else %}
+    <div class="card-no-hover" style="text-align: center; padding: 48px 24px;">
+      <p style="color: var(--text-secondary);">{{ t('dash_no_farm', 'Please set up your farm profile in the "My Farm" tab to view dashboard analytics.') }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

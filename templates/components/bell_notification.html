@@ -1,0 +1,132 @@
+<div class="dashboard-bell-container" style="position: relative; margin-left: 12px; display: inline-block; vertical-align: middle;">
+  <button id="dashboard-bell-btn" class="btn-circle" style="background: #FFFFFF; border: 1px solid rgba(111,175,123,0.25); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(40, 89, 67, 0.05); font-size: 18px; position: relative; transition: all 0.2s ease;" title="View Farm Quick Notes">
+    🔔
+    <span id="dashboard-bell-badge" style="position: absolute; top: -3px; right: -3px; background: #E66A6A; color: white; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 2px solid white; display: none;">0</span>
+  </button>
+  
+  <!-- Bell Dropdown Card -->
+  <div id="dashboard-bell-dropdown" class="card-no-hover" style="position: absolute; right: 0; top: 52px; width: 300px; z-index: 1000; display: none; padding: 16px; border: 1px solid rgba(111,175,123,0.15); box-shadow: 0 10px 30px rgba(40, 89, 67, 0.12); border-radius: 16px; background: white; text-align: left;">
+    <h4 style="margin: 0 0 12px 0; color: var(--deep-forest); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; font-size: 13.5px; font-weight: 700;">
+      <span>📝 Farm Quick Notes</span>
+      <a href="{{ url_for('settings.settings') }}#quick-notes-container" style="font-size: 11px; color: #6FAF7B; text-decoration: none; font-weight: 600;">Manage Notes</a>
+    </h4>
+    <div id="dashboard-bell-notes-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 8px;">
+      <!-- Populated via fetch -->
+      <div style="text-align: center; color: var(--text-secondary); font-size: 12px; padding: 12px 0;">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const bellBtn = document.getElementById("dashboard-bell-btn");
+    const bellDropdown = document.getElementById("dashboard-bell-dropdown");
+    const bellBadge = document.getElementById("dashboard-bell-badge");
+    const bellNotesList = document.getElementById("dashboard-bell-notes-list");
+
+    if (!bellBtn || !bellDropdown) return;
+
+    // Fetch quick notes initially to set the badge count
+    fetchNotesBadge();
+
+    // Toggle dropdown on bell click
+    bellBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isVisible = bellDropdown.style.display === "block";
+        if (!isVisible) {
+            loadNotesIntoDropdown();
+            bellDropdown.style.display = "block";
+        } else {
+            bellDropdown.style.display = "none";
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", () => {
+        bellDropdown.style.display = "none";
+    });
+
+    // Prevent closing when clicking inside the dropdown
+    bellDropdown.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
+
+    async function fetchNotesBadge() {
+        try {
+            const resp = await fetch("/quick-notes");
+            const data = await resp.json();
+            if (data.success) {
+                const incomplete = data.notes.filter(n => !n.completed);
+                if (incomplete.length > 0) {
+                    bellBadge.textContent = incomplete.length;
+                    bellBadge.style.display = "block";
+                } else {
+                    bellBadge.style.display = "none";
+                }
+            }
+        } catch (err) {
+            console.error("Error setting bell badge:", err);
+        }
+    }
+
+    async function loadNotesIntoDropdown() {
+        try {
+            bellNotesList.innerHTML = `<div style="text-align: center; color: var(--text-secondary); font-size: 12px; padding: 12px 0;">Loading...</div>`;
+            const resp = await fetch("/quick-notes");
+            const data = await resp.json();
+            if (data.success) {
+                const incomplete = data.notes.filter(n => !n.completed);
+                
+                // Update badge too
+                if (incomplete.length > 0) {
+                    bellBadge.textContent = incomplete.length;
+                    bellBadge.style.display = "block";
+                } else {
+                    bellBadge.style.display = "none";
+                }
+
+                renderDropdownList(incomplete);
+            } else {
+                bellNotesList.innerHTML = `<div style="text-align: center; color: var(--red-alert); font-size: 12px; padding: 12px 0;">Failed to load.</div>`;
+            }
+        } catch (err) {
+            console.error("Error loading dropdown notes:", err);
+            bellNotesList.innerHTML = `<div style="text-align: center; color: var(--red-alert); font-size: 12px; padding: 12px 0;">Connection error.</div>`;
+        }
+    }
+
+    function renderDropdownList(notes) {
+        bellNotesList.innerHTML = "";
+        if (!notes || notes.length === 0) {
+            bellNotesList.innerHTML = `<div style="text-align: center; color: var(--text-secondary); font-size: 12px; padding: 16px 0;">All caught up! No active purchase items.</div>`;
+            return;
+        }
+
+        notes.forEach(note => {
+            const div = document.createElement("div");
+            div.style.display = "flex";
+            div.style.alignItems = "center";
+            div.style.gap = "8px";
+            div.style.padding = "6px 8px";
+            div.style.background = "#F9FBF9";
+            div.style.border = "1px solid rgba(111, 175, 123, 0.08)";
+            div.style.borderRadius = "8px";
+            div.style.fontSize = "12.5px";
+            div.style.color = "#333";
+            div.style.wordBreak = "break-word";
+
+            const bullet = document.createElement("span");
+            bullet.textContent = "○";
+            bullet.style.color = "#6FAF7B";
+            bullet.style.fontWeight = "bold";
+
+            const txt = document.createElement("span");
+            txt.textContent = note.note;
+
+            div.appendChild(bullet);
+            div.appendChild(txt);
+            bellNotesList.appendChild(div);
+        });
+    }
+});
+</script>

@@ -1,0 +1,802 @@
+{% extends "base.html" %}
+
+{% block title %}{{ agent_name }} — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+
+    <!-- Agent Header -->
+    <div class="card" style="display:flex;align-items:center;gap:24px;margin-bottom:var(--space-xl);overflow:hidden;">
+      <div style="width:80px;height:80px;border-radius:18px;overflow:hidden;background:var(--pale-green);
+                  flex-shrink:0;border:1px solid rgba(111,175,123,0.1);">
+        <img src="{{ url_for('static', filename='images/' + meta.icon) }}"
+             alt="{{ agent_name }}" style="width:100%;height:100%;object-fit:cover;" />
+      </div>
+      <div style="flex:1;">
+        <h1 style="font-size:26px;font-weight:800;color:var(--deep-forest);margin-bottom:4px;">
+          {{ meta.emoji }} {{ agent_name }}
+        </h1>
+        <p style="color:var(--text-secondary);font-size:13px;max-width:600px;">{{ meta.description }}</p>
+      </div>
+
+      {% if farm %}
+      <button id="run-btn" onclick="runAgent()"
+              class="btn btn-primary"
+              style="white-space:nowrap;min-width:180px;">
+        ⚡ Execute Analysis Run
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- Status Toast (hidden by default) -->
+    <div id="run-status" style="display:none;padding:14px 20px;border-radius:12px;
+         font-size:14px;font-weight:500;margin-bottom:var(--space-lg);
+         border-left:4px solid var(--primary);background:var(--pale-green);color:var(--deep-forest);">
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--space-xl);align-items:start;">
+
+      <!-- Diagnostic Output -->
+      <div style="display:flex;flex-direction:column;gap:var(--space-xl);">
+
+        <!-- Crop Image Upload Card (Disease Agent only) -->
+        {% if agent_name == 'Crop Disease Agent' %}
+        <div class="card-no-hover" id="upload-card">
+          <h3 style="color:var(--deep-forest);margin-bottom:var(--space-md);font-size:16px;">
+            📷 Upload Crop Image for AI Disease Detection
+          </h3>
+          <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
+            Upload a clear photo of affected leaves or crop (JPG/JPEG/PNG/WEBP, max 5MB). Gemini Vision AI will analyze the image and detect possible diseases, pests, or deficiencies.
+          </p>
+          <form id="upload-form" enctype="multipart/form-data"
+                style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <input type="file" name="crop_image" id="crop-image-input"
+                   accept=".jpg,.jpeg,.png,.webp"
+                   style="flex:1;min-width:200px;font-size:13px;padding:8px;border:1.5px dashed #c3dac9;
+                          border-radius:10px;background:var(--bg);" />
+            <button type="button" onclick="uploadImage()"
+                     id="upload-btn"
+                     class="btn btn-sm btn-outline">Upload Image</button>
+          </form>
+          <p id="upload-msg" style="font-size:12px;margin-top:8px;color:var(--text-secondary);"></p>
+
+          <!-- Image Preview -->
+          <div id="crop-image-preview-container" style="display:none; margin-top: 16px; position: relative; max-width: 250px; border-radius: 12px; overflow: hidden; border: 1.5px solid #c3dac9; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <img id="crop-image-preview" src="" alt="Crop Preview" style="width: 100%; height: auto; display: block;" />
+            <button type="button" id="remove-preview-btn" onclick="removeImagePreview()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1;">&times;</button>
+          </div>
+
+          <!-- Analysis Results Display -->
+          <div id="crop-analysis-api-results" style="display:none; margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 15px;"></div>
+        </div>
+        {% endif %}
+
+        {% if agent_name == 'Weather Agent' %}
+        <!-- ── Live Weather Card (Weather Agent only) ──────────────── -->
+        <div class="card-no-hover" id="live-weather-card"
+             style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f9e8 100%);
+                    border: 1.5px solid rgba(140,200,242,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="color:var(--deep-forest);font-size:15px;">
+              🌤️ Live Weather at Your Farm Location
+            </h3>
+            <span id="weather-badge"
+                  style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;
+                         background:#d1eaf7;color:#1a6693;letter-spacing:.5px;">FETCHING…</span>
+          </div>
+          <div id="live-weather-body">
+            <!-- populated by JS -->
+            <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">
+              <span class="spinner" style="display:inline-block;width:18px;height:18px;
+                     border:3px solid rgba(0,0,0,.1);border-top-color:var(--primary);
+                     border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;"></span>
+              Loading live weather…
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Latest Analysis Output -->
+        <div class="card-no-hover" id="analysis-card">
+          <h3 style="color:var(--deep-forest);margin-bottom:var(--space-md);padding-bottom:8px;
+                     border-bottom:1px solid rgba(0,0,0,0.06);font-size:16px;">
+            📋 Latest Diagnostic Output
+          </h3>
+
+          <div id="analysis-content">
+            {% if latest_run and parsed_output %}
+              {% include "components/agent_output.html" %}
+            {% else %}
+            <div style="text-align:center;padding:48px 24px;color:var(--text-secondary);">
+              <div style="font-size:48px;margin-bottom:12px;">📊</div>
+              <p>No analysis found. Click <strong>Execute Analysis Run</strong> above to generate AI diagnostics.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── Ask This Agent Q&A Box ───────────────────────────────── -->
+        <div class="card-no-hover" id="agent-qa-card" style="text-align: center; padding: 32px 24px; border: 1.5px solid var(--agent-accent-alpha, rgba(111,175,123,0.15));">
+          <h3 style="color:var(--deep-forest);margin-bottom:var(--space-md);font-size:16px;">
+            💬 Conversational Advisor
+          </h3>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;max-width:500px;margin-left:auto;margin-right:auto;">
+            Have specific questions about these diagnostics, recommendations, or telemetry data? Chat directly with the specialized {{ agent_name }} in your preferred language.
+          </p>
+          <button onclick="askAgentChat('{{ meta.slug }}')" class="btn btn-primary" style="min-width: 220px; font-weight:600;">
+            💬 Ask {{ agent_name }}
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Metadata + History Panel -->
+      <div style="display:flex;flex-direction:column;gap:var(--space-xl);">
+
+        <!-- Run Metadata -->
+        <div class="card-no-hover">
+          <h3 style="color:var(--deep-forest);margin-bottom:var(--space-md);padding-bottom:8px;
+                     border-bottom:1px solid rgba(0,0,0,0.06);font-size:16px;">
+            ℹ️ Last Run Metadata
+          </h3>
+          <div id="meta-panel">
+            {% if latest_run %}
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--text-secondary);">Status</span>
+                <span class="badge {% if latest_run.status == 'Completed' %}badge-green{% else %}badge-red{% endif %}">
+                  {{ latest_run.status }}
+                </span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--text-secondary);">Risk Level</span>
+                <span class="badge {% if latest_run.risk_level == 'High' %}badge-yellow{% elif latest_run.risk_level == 'Medium' %}badge-yellow{% else %}badge-green{% endif %}">
+                  {{ latest_run.risk_level }}
+                </span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:var(--text-secondary);">Confidence</span>
+                <strong>{{ latest_run.confidence }}%</strong>
+              </div>
+              <div>
+                <div class="progress-bar" style="height:8px;margin-top:4px;">
+                  <div class="progress-fill"
+                       style="width:{{ latest_run.confidence }}%;transition:width 1s ease;">
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:var(--text-secondary);">Timestamp</span>
+                <span style="color:var(--text-secondary);font-size:11px;">{{ latest_run.run_time }}</span>
+              </div>
+            </div>
+            {% else %}
+            <p style="color:var(--text-secondary);font-size:13px;text-align:center;">No runs yet.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Run History -->
+        <div class="card-no-hover">
+          <h3 style="color:var(--deep-forest);margin-bottom:var(--space-md);padding-bottom:8px;
+                     border-bottom:1px solid rgba(0,0,0,0.06);font-size:16px;">
+            ⏳ Execution History
+          </h3>
+          <div style="display:flex;flex-direction:column;gap:8px;" id="history-list">
+            {% for hist in runs_history %}
+            <div style="padding:10px;background:var(--bg);border-radius:10px;
+                        font-size:12px;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:600;color:var(--text);">{{ hist.run_time|safe_date }}</div>
+                <div style="color:var(--text-secondary);font-size:11px;margin-top:2px;">
+                  Confidence: {{ hist.confidence }}%
+                </div>
+              </div>
+              <span class="badge {% if hist.risk_level == 'High' or hist.risk_level == 'Medium' %}badge-yellow{% else %}badge-green{% endif %}">
+                {{ hist.risk_level }}
+              </span>
+            </div>
+            {% else %}
+            <p style="color:var(--text-secondary);font-size:12px;text-align:center;">No history records.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if agent_name == 'Fertilizer Agent' %}
+        <!-- Essential Fertilizers Guide -->
+        <div class="card-no-hover" style="margin-top: 0;">
+          <h3 style="color: var(--deep-forest); margin-bottom: var(--space-md); padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 16px;">
+            🧪 Essential Fertilizers Guide
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">1. Urea</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">Nitrogen (46%)</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">2. DAP</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">N-P (18-46-0)</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">3. MOP / Potash</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">Potassium (60%)</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">4. SSP</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">P-S-Ca (0-16-0)</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">5. NPK 10:26:26</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">N-P-K Complex</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">6. NPK 19:19:19</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">Balanced N-P-K</span>
+            </div>
+            <div style="padding: 10px; background: var(--bg); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+              <span style="font-weight: 600; color: var(--deep-forest);">7. Ammonium Sulphate</span>
+              <span class="badge badge-green" style="font-size: 10px; padding: 2px 8px; background: var(--pale-green); color: var(--primary);">N-S (21-0-0)</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const AGENT_SLUG = "{{ meta.slug }}";
+  const RUN_URL   = "/agents/" + AGENT_SLUG + "/run";
+
+  function setStatus(msg, type) {
+    const el = document.getElementById('run-status');
+    el.style.display = 'block';
+    el.textContent = msg;
+    el.style.background = type === 'error' ? '#FDE8E8' : 'var(--pale-green)';
+    el.style.color = type === 'error' ? '#9B1C1C' : 'var(--deep-forest)';
+    el.style.borderLeftColor = type === 'error' ? '#D97D7D' : 'var(--primary)';
+  }
+
+  function renderOutput(result) {
+    const container = document.getElementById('analysis-content');
+    if (!result || result.error) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:32px;color:#9B1C1C;">
+          <p>⚠️ ${result?.error || 'AI service temporarily unavailable. Please try again.'}</p>
+        </div>`;
+      return;
+    }
+    
+    const riskBadge = (r) => {
+      const cls = r === 'High' || r === 'Medium' ? 'badge-yellow' : 'badge-green';
+      return `<span class="badge ${cls}">${r}</span>`;
+    };
+
+    let actionsHtml = '';
+    const actions = result.actions || result.priority_actions || [];
+    if (actions.length) {
+      actionsHtml = `<div>
+        <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+          Action Items
+        </h4>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${actions.map(a => `
+            <div style="padding:12px;background:var(--bg);border-radius:10px;
+                        display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <strong style="font-size:13px;color:var(--deep-forest);">${a.title || a.agent || ''}</strong>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">${a.description || ''}</p>
+              </div>
+              ${riskBadge(a.priority || 'Medium')}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Summary</h4>
+          <p style="font-size:15px;margin-top:4px;line-height:1.6;color:var(--text);">
+            ${result.summary || result.final_plan || ''}
+          </p>
+        </div>
+        ${result.recommendation ? `<div>
+          <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Recommendation</h4>
+          <p style="font-size:14px;margin-top:4px;color:var(--primary);font-weight:600;">💡 ${result.recommendation}</p>
+        </div>` : ''}
+        ${actionsHtml}
+        ${result.reasoning ? `<div>
+          <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Reasoning</h4>
+          <p style="font-size:13px;color:var(--text-secondary);margin-top:4px;line-height:1.5;font-style:italic;">
+            ${result.reasoning}
+          </p>
+        </div>` : ''}
+      </div>`;
+
+    // Update metadata panel
+    const metaPanel = document.getElementById('meta-panel');
+    const risk = result.risk_level || result.overall_risk || 'Low';
+    const conf = result.confidence || 90;
+    const riskClass = (risk === 'High' || risk === 'Medium') ? 'badge-yellow' : 'badge-green';
+    metaPanel.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-secondary);">Status</span>
+          <span class="badge badge-green">Completed</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--text-secondary);">Risk Level</span>
+          <span class="badge ${riskClass}">${risk}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--text-secondary);">Confidence</span>
+          <strong>${conf}%</strong>
+        </div>
+        <div>
+          <div class="progress-bar" style="height:8px;margin-top:4px;">
+            <div class="progress-fill" style="width:${conf}%;transition:width 1s ease;"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function runAgent() {
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Analysing…';
+    setStatus('Running AI analysis… this may take a few seconds.', 'info');
+
+    try {
+      const resp = await fetch(RUN_URL, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      });
+      const data = await resp.json();
+
+      if (data.error) {
+        setStatus('⚠️ ' + data.error, 'error');
+      } else {
+        setStatus('✅ Analysis completed successfully!', 'success');
+        renderOutput(data.result);
+        // Refresh live weather card after run
+        if (AGENT_SLUG === 'weather') loadLiveWeather();
+      }
+    } catch (err) {
+      setStatus('⚠️ Network error. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⚡ Execute Analysis Run';
+    }
+  }
+
+  const headingTranslations = {
+    en: {
+      title: "🌿 CROP DISEASE ANALYSIS",
+      detected_issue: "🔍 Detected Issue",
+      likely_cause: "⚠️ What Caused It?",
+      why_it_may_have_occurred: "🔎 Why Did It Happen?",
+      visual_symptoms: "🧪 Symptoms",
+      severity: "📊 Severity",
+      what_to_do_now: "🚜 What Should I Do Now?",
+      prevention: "🛡️ Prevention",
+      confidence: "📈 Confidence",
+      missing_information: "❓ Missing Information",
+      explanation: "🧠 Explanation"
+    },
+    te: {
+      title: "🌿 పంట వ్యాధి విశ్లేషణ",
+      detected_issue: "🔍 గుర్తించిన సమస్య",
+      likely_cause: "⚠️ దీనికి కారణం ఏమిటి?",
+      why_it_may_have_occurred: "🔎 ఇది ఎందుకు జరిగి ఉండవచ్చు?",
+      visual_symptoms: "🧪 లక్షణాలు",
+      severity: "📊 తీవ్రత",
+      what_to_do_now: "🚜 ఇప్పుడు నేను ఏమి చేయాలి?",
+      prevention: "🛡️ నివారణ",
+      confidence: "📈 విశ్వసనీయత",
+      missing_information: "❓ లేని సమాచారం",
+      explanation: "🧠 వివరణ"
+    },
+    hi: {
+      title: "🌿 फसल रोग विश्लेषण",
+      detected_issue: "🔍 पहचानी गई समस्या",
+      likely_cause: "⚠️ इसका क्या कारण था?",
+      why_it_may_have_occurred: "🔎 यह क्यों हुआ होगा?",
+      visual_symptoms: "🧪 लक्षण",
+      severity: "📊 गंभीरता",
+      what_to_do_now: "🚜 अब मुझे क्या करना चाहिए?",
+      prevention: "🛡️ रोकथाम",
+      confidence: "📈 आत्मविश्वास",
+      missing_information: "❓ लापता जानकारी",
+      explanation: "🧠 स्पष्टीकरण"
+    },
+    ta: {
+      title: "🌿 பயிர் நோய் பகுப்பாய்வு",
+      detected_issue: "🔍 கண்டறியப்பட்ட சிக்கல்",
+      likely_cause: "⚠️ இதற்கு என்ன காரணம்?",
+      why_it_may_have_occurred: "🔎 இது ஏன் நடந்திருக்கலாம்?",
+      visual_symptoms: "🧪 அறிகுறிகள்",
+      severity: "📊 தீவிரம்",
+      what_to_do_now: "🚜 இப்போது நான் என்ன செய்ய வேண்டும்?",
+      prevention: "🛡️ தடுப்பு",
+      confidence: "📈 நம்பிக்கை",
+      missing_information: "❓ விடுபட்ட தகவல்",
+      explanation: "🧠 விளக்கம்"
+    },
+    kn: {
+      title: "🌿 ಬೆಳೆ ರೋಗ ವಿಶ್ಲೇಷಣೆ",
+      detected_issue: "🔍 ಪತ್ತೆಯಾದ ಸಮಸ್ಯೆ",
+      likely_cause: "⚠️ ಇದಕ್ಕೆ ಕಾರಣವೇನು?",
+      why_it_may_have_occurred: "🔎 ಇದು ಏಕೆ ಸಂಭವಿಸಿರಬಹುದು?",
+      visual_symptoms: "🧪 ರೋಗಲಕ್ಷಣಗಳು",
+      severity: "📊 ತೀವ್ರತೆ",
+      what_to_do_now: "🚜 ಈಗ ನಾನು ಏನು ಮಾಡಬೇಕು?",
+      prevention: "🛡️ ತಡೆಗಟ್ಟುವಿಕೆ",
+      confidence: "📈 ವಿಶ್ವಾಸಾರ್ಹತೆ",
+      missing_information: "❓ ಕಾಣೆಯಾದ ಮಾಹಿತಿ",
+      explanation: "🧠 ವಿವರಣೆ"
+    },
+    ja: {
+      title: "🌿 作物病害虫診断",
+      detected_issue: "🔍 検出された問題",
+      likely_cause: "⚠️ 原因は何ですか？",
+      why_it_may_have_occurred: "🔎 なぜ発生した可能性がありますか？",
+      visual_symptoms: "🧪 症状",
+      severity: "📊 深刻度",
+      what_to_do_now: "🚜 今後の対応案",
+      prevention: "🛡️ 予防策",
+      confidence: "📈 信頼度",
+      missing_information: "❓ 不足している情報",
+      explanation: "🧠 詳細説明"
+    },
+    ko: {
+      title: "🌿 작물 질병 분석",
+      detected_issue: "🔍 감지된 문제",
+      likely_cause: "⚠️ 원인은 무엇인가요?",
+      why_it_may_have_occurred: "🔎 왜 발생했을까요?",
+      visual_symptoms: "🧪 증상",
+      severity: "📊 심각도",
+      what_to_do_now: "🚜 지금 해야 할 일",
+      prevention: "🛡️ 예방 조치",
+      confidence: "📈 신뢰도",
+      missing_information: "❓ 누락된 정보",
+      explanation: "🧠 상세 설명"
+    }
+  };
+
+  function renderCropAnalysisResults(analysis, lang) {
+    const resultsDiv = document.getElementById('crop-analysis-api-results');
+    if (!resultsDiv) return;
+
+    const headings = headingTranslations[lang] || headingTranslations['en'];
+    
+    const formatList = (arr) => {
+      if (!arr || !arr.length) return '';
+      return `<ul style="margin: 4px 0 12px 18px; padding: 0; list-style-type: disc;">
+        ${arr.map(item => `<li style="font-size: 13.5px; color: var(--text-primary); line-height: 1.5; margin-bottom: 3px;">${item}</li>`).join('')}
+      </ul>`;
+    };
+
+    resultsDiv.innerHTML = `
+      <div style="background: #FAFDFB; border: 1.5px solid #c3dac9; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <h3 style="color: var(--deep-forest); font-size: 15px; margin: 0 0 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 6px;">
+          ${headings.title}
+        </h3>
+        
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block;">${headings.detected_issue}</strong>
+          <span style="font-size: 14px; font-weight: 700; color: #E66A6A;">${analysis.detected_issue || 'Unknown'}</span>
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.likely_cause}</strong>
+          <span style="font-size: 13px; color: var(--text-primary); line-height: 1.5;">${analysis.likely_cause || ''}</span>
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.why_it_may_have_occurred}</strong>
+          <span style="font-size: 13px; color: var(--text-primary); line-height: 1.5;">${analysis.why_it_may_have_occurred || ''}</span>
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.visual_symptoms}</strong>
+          ${formatList(analysis.visual_symptoms)}
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.severity}</strong>
+          <span class="badge badge-yellow" style="font-weight: 600; font-size: 10px; padding: 2px 6px; border-radius: 4px;">${analysis.severity || 'Moderate'}</span>
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.what_to_do_now}</strong>
+          ${formatList(analysis.what_to_do_now)}
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.prevention}</strong>
+          ${formatList(analysis.prevention)}
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.confidence}</strong>
+          <span style="font-size: 13px; color: var(--text-primary);">${analysis.confidence || 'Moderate'}</span>
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.missing_information}</strong>
+          ${formatList(analysis.missing_information)}
+        </div>
+
+        <div>
+          <strong style="color: var(--deep-forest); font-size: 12px; display: block; margin-bottom: 2px;">${headings.explanation}</strong>
+          <span style="font-size: 12.5px; color: var(--text-secondary); font-style: italic; line-height: 1.5;">${analysis.explanation || ''}</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 10px; flex-wrap: wrap;">
+          <button type="button" id="tts-play-analysis-btn" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 4px 8px;">
+            🔊 Play Voice
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="askAgentChat('crop-disease')" style="font-size: 12px; padding: 4px 8px;">
+            💬 Ask Crop Disease Agent
+          </button>
+        </div>
+      </div>
+    `;
+
+    resultsDiv.style.display = 'block';
+
+    const ttsBtn = document.getElementById('tts-play-analysis-btn');
+    if (ttsBtn) {
+      const speechText = `
+        Crop disease analysis completed. 
+        Detected issue: ${analysis.detected_issue}. 
+        Likely cause: ${analysis.likely_cause}. 
+        Severity: ${analysis.severity}. 
+        Explanation: ${analysis.explanation}.
+      `;
+      ttsBtn.addEventListener('click', function() {
+        if (typeof playVoiceTTS === 'function') {
+          playVoiceTTS(speechText, ttsBtn);
+        } else {
+          const cleanText = speechText.replace(/\*\*/g, '').replace(/\*/g, '').replace(/•/g, '');
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          const vMap = { en: "en-US", te: "te-IN", hi: "hi-IN", ta: "ta-IN", kn: "kn-IN", ja: "ja-JP", ko: "ko-KR" };
+          utterance.lang = vMap[lang] || "en-US";
+          window.speechSynthesis.speak(utterance);
+        }
+      });
+    }
+  }
+
+  async function uploadImage() {
+    const fileInput = document.getElementById('crop-image-input');
+    const msg = document.getElementById('upload-msg');
+    const previewContainer = document.getElementById('crop-image-preview-container');
+    const previewImg = document.getElementById('crop-image-preview');
+    const resultsDiv = document.getElementById('crop-analysis-api-results');
+    // Support both IDs for the upload button
+    const uploadBtn = document.getElementById('upload-btn') || 
+                      (document.getElementById('upload-form') ? 
+                       document.getElementById('upload-form').querySelector('button') : null);
+    
+    if (!fileInput || !fileInput.files.length) {
+      if (msg) { msg.textContent = 'Please select an image file first.'; msg.style.color = '#9B1C1C'; }
+      return;
+    }
+    const file = fileInput.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      if (msg) { msg.textContent = 'File too large. Please select an image under 5MB.'; msg.style.color = '#9B1C1C'; }
+      return;
+    }
+
+    // Show image preview immediately
+    const objectUrl = URL.createObjectURL(file);
+    if (previewImg) previewImg.src = objectUrl;
+    if (previewContainer) previewContainer.style.display = 'block';
+
+    // Update UI to loading state
+    if (msg) { msg.textContent = 'Image uploaded. Analyzing with Gemini...'; msg.style.color = 'var(--text-secondary)'; }
+    if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = '🔍 Analyzing...'; }
+    if (resultsDiv) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; }
+
+    // Change message after 1.5 seconds
+    const msgTimer = setTimeout(() => {
+      if (msg && msg.textContent === 'Image uploaded. Analyzing with Gemini...') {
+        msg.textContent = '🔍 Analyzing crop image with Gemini Vision...';
+      }
+    }, 1500);
+
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    // Get selected language
+    let userLang = 'en';
+    const appLang = document.documentElement.lang;
+    if (appLang && ['en', 'te', 'hi', 'ta', 'kn', 'ja', 'ko'].includes(appLang)) {
+      userLang = appLang;
+    } else {
+      userLang = '{{ user.language or "en" }}';
+      if (!['en', 'te', 'hi', 'ta', 'kn', 'ja', 'ko'].includes(userLang)) {
+        userLang = 'en';
+      }
+    }
+    formData.append('language', userLang);
+
+    try {
+      const resp = await fetch('/api/crop-analysis', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      clearTimeout(msgTimer);
+
+      // Reset button state
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Image'; }
+
+      // Check for session expiry (401) or server errors
+      if (resp.status === 401) {
+        if (msg) { msg.textContent = 'Session expired. Please refresh the page and sign in again.'; msg.style.color = '#9B1C1C'; }
+        return;
+      }
+
+      // Try to parse JSON — handle non-JSON responses gracefully
+      let data;
+      try {
+        data = await resp.json();
+      } catch (jsonErr) {
+        console.error('[CropAnalysis] Server returned non-JSON response:', jsonErr);
+        if (msg) { msg.textContent = 'Image uploaded, but AI analysis could not be completed. Please try again.'; msg.style.color = '#9B1C1C'; }
+        return;
+      }
+
+      if (data.success && data.analysis) {
+        if (msg) { msg.textContent = '✅ Analysis complete.'; msg.style.color = 'var(--primary)'; }
+        renderCropAnalysisResults(data.analysis, userLang);
+      } else {
+        const errMsg = data.error || 'Image uploaded, but AI analysis could not be completed. Please try again.';
+        if (msg) { msg.textContent = errMsg; msg.style.color = '#9B1C1C'; }
+        console.error('[CropAnalysis] API error:', errMsg);
+      }
+    } catch (err) {
+      clearTimeout(msgTimer);
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Image'; }
+      if (msg) { msg.textContent = 'Network error. Please check your connection and try again.'; msg.style.color = '#9B1C1C'; }
+      console.error('[CropAnalysis] Fetch error:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('crop-image-input');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        const previewContainer = document.getElementById('crop-image-preview-container');
+        const previewImg = document.getElementById('crop-image-preview');
+        const msg = document.getElementById('upload-msg');
+        
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          if (file.size > 5 * 1024 * 1024) {
+            if (msg) { msg.textContent = 'File too large. Please select an image under 5MB.'; msg.style.color = '#9B1C1C'; }
+            this.value = '';
+            if (previewContainer) previewContainer.style.display = 'none';
+            return;
+          }
+          if (msg) { msg.textContent = ''; }
+          const objectUrl = URL.createObjectURL(file);
+          if (previewImg) previewImg.src = objectUrl;
+          if (previewContainer) previewContainer.style.display = 'block';
+        }
+      });
+    }
+  });
+
+  function removeImagePreview() {
+    const fileInput = document.getElementById('crop-image-input');
+    const previewContainer = document.getElementById('crop-image-preview-container');
+    const previewImg = document.getElementById('crop-image-preview');
+    const msg = document.getElementById('upload-msg');
+    const resultsDiv = document.getElementById('crop-analysis-api-results');
+    
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (previewImg) previewImg.src = '';
+    if (msg) { msg.textContent = ''; }
+    if (resultsDiv) {
+      resultsDiv.style.display = 'none';
+      resultsDiv.innerHTML = '';
+    }
+  }
+
+  // ── Live Weather Widget (Weather Agent page only) ───────────────────────
+  function windDirection(deg) {
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    return dirs[Math.round(deg / 45) % 8];
+  }
+
+  function renderWeatherCard(w) {
+    const badge = document.getElementById('weather-badge');
+    const body  = document.getElementById('live-weather-body');
+    if (!badge || !body) return;
+    badge.textContent  = 'LIVE';
+    badge.style.background = '#d4f0d4';
+    badge.style.color      = '#1a6932';
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-size:26px;">🌡️</div>
+          <div style="font-size:20px;font-weight:800;color:var(--deep-forest);">${w.temperature_c}°C</div>
+          <div style="font-size:11px;color:var(--text-secondary);">Feels like ${w.feels_like_c}°C</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;">Temperature</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-size:26px;">💧</div>
+          <div style="font-size:20px;font-weight:800;color:var(--deep-forest);">${w.humidity_pct}%</div>
+          <div style="font-size:11px;color:var(--text-secondary);">${w.precipitation_mm} mm rain/hr</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;">Humidity</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-size:26px;">🌬️</div>
+          <div style="font-size:20px;font-weight:800;color:var(--deep-forest);">${w.wind_speed_kmh}</div>
+          <div style="font-size:11px;color:var(--text-secondary);">km/h ${windDirection(w.wind_direction)}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;">Wind Speed</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-size:26px;">☀️</div>
+          <div style="font-size:20px;font-weight:800;color:var(--deep-forest);">${w.uv_index}</div>
+          <div style="font-size:11px;color:var(--text-secondary);">UV Index</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;">Solar Radiation</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:12px;text-align:center;grid-column:span 2;">
+          <div style="font-size:24px;">${w.is_day ? '🌅' : '🌙'}</div>
+          <div style="font-size:15px;font-weight:700;color:var(--deep-forest);">${w.condition}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">📍 ${w.location}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${w.is_day ? 'Daytime' : 'Night-time'}</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text-secondary);text-align:right;">
+        Source: Open-Meteo.com — updated at analysis time
+      </div>
+    `;
+  }
+
+  async function loadLiveWeather() {
+    const body  = document.getElementById('live-weather-body');
+    const badge = document.getElementById('weather-badge');
+    if (!body) return;  // not on weather agent page
+    try {
+      const resp = await fetch('/api/weather');
+      const data = await resp.json();
+      if (data.success && data.weather) {
+        renderWeatherCard(data.weather);
+      } else {
+        if (badge) { badge.textContent = 'UNAVAILABLE'; badge.style.background='#fde8e8'; badge.style.color='#9b1c1c'; }
+        if (body) body.innerHTML = `<p style="font-size:12px;color:#9b1c1c;padding:8px;">
+          ⚠️ ${data.error || 'Live weather unavailable.'}</p>`;
+      }
+    } catch(e) {
+      if (badge) { badge.textContent = 'OFFLINE'; badge.style.background='#fde8e8'; badge.style.color='#9b1c1c'; }
+      if (body) body.innerHTML = `<p style="font-size:12px;color:#9b1c1c;padding:8px;">⚠️ Network error fetching weather.</p>`;
+    }
+  }
+
+  // Auto-load on page entry if this is the Weather Agent page
+  if (AGENT_SLUG === 'weather') {
+    loadLiveWeather();
+  }
+
+</script>
+{% endblock %}

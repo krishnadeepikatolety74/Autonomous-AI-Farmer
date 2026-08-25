@@ -1,0 +1,91 @@
+/* Farm Quick Notes Checklist Component CSS Stylesheet */
+
+.quick-notes-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(111, 175, 123, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(40, 89, 67, 0.05);
+    padding: var(--space-lg);
+}
+
+.quick-notes-list {
+    min-height: 40px;
+}
+
+.quick-note-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #F9FBF9;
+    border: 1px solid rgba(111, 175, 123, 0.08);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.quick-note-item:hover {
+    background: #EAF7EC;
+    border-color: rgba(111, 175, 123, 0.15);
+    transform: translateX(2px);
+}
+
+.quick-note-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    cursor: pointer;
+}
+
+/* Custom Checkbox circle style */
+.quick-note-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #6FAF7B;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.quick-note-item.completed .quick-note-checkbox {
+    background: #6FAF7B;
+    border-color: #6FAF7B;
+    color: #FFFFFF;
+}
+
+.quick-note-text {
+    font-size: 13.5px;
+    color: #333333;
+    transition: all 0.2s ease;
+    word-break: break-word;
+}
+
+.quick-note-item.completed .quick-note-text {
+    text-decoration: line-through;
+    color: #888888;
+}
+
+.quick-note-delete-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #E66A6A;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-note-delete-btn:hover {
+    background: #FDF2F2;
+    transform: scale(1.1);
+}

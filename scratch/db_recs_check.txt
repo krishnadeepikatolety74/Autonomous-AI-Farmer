@@ -1,0 +1,27 @@
+ID: 2, FarmID: 2, Agent: Fertilizer Agent, Completed: 0, Title: Apply Nitrogen dressing
+ID: 18, FarmID: 3, Agent: Irrigation Agent, Completed: 0, Title: అదనపు డ్రిప్ ఇరిగేషన్‌ను ప్రారంభించండి
+ID: 19, FarmID: 3, Agent: Irrigation Agent, Completed: 0, Title: నేల తేమ మరియు పంట ఒత్తిడిని పర్యవేక్షించండి
+ID: 20, FarmID: 3, Agent: Irrigation Agent, Completed: 0, Title: అంచనాలతో నీటిపారుదల షెడ్యూల్‌ను సర్దుబాటు చేయండి
+ID: 21, FarmID: 3, Agent: Irrigation Agent, Completed: 0, Title: నీటిపారుదల సమయాన్ని ఆప్టిమైజ్ చేయండి
+ID: 26, FarmID: 3, Agent: Market Agent, Completed: 0, Title: కోత మరియు తక్షణ భాగాన్ని విక్రయించండి
+ID: 27, FarmID: 3, Agent: Market Agent, Completed: 0, Title: మార్కెట్ పోకడలను పర్యవేక్షించండి
+ID: 28, FarmID: 3, Agent: Market Agent, Completed: 0, Title: మిగిలిన స్టాక్ కోసం నిల్వ అంచనా
+ID: 29, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: నత్రజని అనుబంధం
+ID: 30, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: పొటాషియం అనుబంధం
+ID: 31, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: భాస్వరం స్థాయిలను పర్యవేక్షించండి
+ID: 32, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: నేల యొక్క సరైన పరిస్థితులను నిర్వహించండి
+ID: 33, FarmID: 3, Agent: Irrigation Agent, Completed: 0, Title: అదనపు డ్రిప్ ఇరిగేషన్‌ను ప్రారంభించండి
+ID: 34, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: నత్రజని అనుబంధం
+ID: 35, FarmID: 3, Agent: Fertilizer Agent, Completed: 0, Title: పొటాషియం అనుబంధం
+ID: 37, FarmID: 3, Agent: Market Agent, Completed: 0, Title: వ్యూహాత్మక మార్కెట్ ప్రమేయం
+ID: 38, FarmID: 3, Agent: Weather Agent, Completed: 0, Title: నీటిపారుదల
+ID: 39, FarmID: 3, Agent: Weather Agent, Completed: 0, Title: మల్చింగ్
+ID: 40, FarmID: 3, Agent: Weather Agent, Completed: 0, Title: పంట ఆరోగ్యాన్ని పర్యవేక్షించండి
+ID: 41, FarmID: 3, Agent: Soil Agent, Completed: 0, Title: నత్రజని ఎరువుల వాడకం
+ID: 42, FarmID: 3, Agent: Soil Agent, Completed: 0, Title: పొటాషియం ఎరువుల వాడకం
+ID: 43, FarmID: 3, Agent: Soil Agent, Completed: 0, Title: భాస్వరం ఎరువుల పర్యవేక్షణ
+ID: 44, FarmID: 3, Agent: Soil Agent, Completed: 0, Title: పంట ఆరోగ్యాన్ని పర్యవేక్షించడం
+ID: 45, FarmID: 3, Agent: Crop Disease Agent, Completed: 0, Title: క్షేత్రాన్ని పర్యవేక్షించండి
+ID: 46, FarmID: 3, Agent: Crop Disease Agent, Completed: 0, Title: పోషకాలను నిర్వహించండి
+ID: 47, FarmID: 3, Agent: Crop Disease Agent, Completed: 0, Title: నీటిపారుదలని సరిచేయండి
+ID: 48, FarmID: 3, Agent: Crop Disease Agent, Completed: 0, Title: కలుపు మొక్కలను నియంత్రించండి

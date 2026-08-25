@@ -1,0 +1,9 @@
+Exception: 'charmap' codec can't encode characters in position 56-67: character maps to <undefined>
+Traceback:
+Traceback (most recent call last):
+  File "C:\Users\kooki\Desktop\Farm\scratch\test_translation_diagnostic.py", line 52, in <module>
+    print(f"Raw response text: {response.text}")
+  File "C:\Users\kooki\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 56-67: character maps to <undefined>

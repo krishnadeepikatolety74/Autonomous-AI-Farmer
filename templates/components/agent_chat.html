@@ -1,0 +1,75 @@
+<!-- Reusable Agent Chat Floating Container -->
+<div class="kisanmitra-bubble-container" id="agent-chat-container" style="display: none; z-index: 1002;">
+  
+  <!-- Floating Circle Agent Bubble (only visible if the main window is minimized) -->
+  <div class="kisanmitra-bubble" id="agent-chat-bubble" title="Ask Agent" style="background: linear-gradient(135deg, var(--agent-bg-light, #EAF7EC) 0%, var(--agent-bg-dark, #DDF3E2) 100%); border-color: var(--agent-accent, #6FAF7B); display: none;">
+    <div class="bubble-icon" id="agent-chat-bubble-icon">🌱</div>
+    <div class="bubble-label" id="agent-chat-bubble-label" style="position: absolute; bottom: -20px; font-size: 9px; font-weight: bold; color: var(--deep-forest); white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Agent Chat</div>
+  </div>
+
+  <!-- Chat Box Window -->
+  <div class="kisanmitra-window" id="agent-chat-window" style="border-color: var(--agent-accent-alpha, rgba(111,175,123,0.2));">
+    
+    <!-- Window Header -->
+    <div class="kisanmitra-header" id="agent-chat-header" style="background: linear-gradient(135deg, var(--agent-bg-light, #EAF7EC) 0%, var(--agent-bg-dark, #DDF3E2) 100%); border-bottom: 1px solid var(--agent-accent-alpha, rgba(111,175,123,0.15));">
+      <div class="kisanmitra-header-title">
+        <h4 id="agent-chat-title" style="color: var(--agent-text-color, #285943);">🌱 Soil Agent</h4>
+        <span class="subtitle" id="agent-chat-subtitle">Agent-specific farming assistant</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="kisanmitra-header-status" style="background: var(--agent-accent-alpha-light, rgba(111,175,123,0.15)); color: var(--agent-text-color, #285943);">
+          <span class="status-dot" style="background: var(--agent-accent, #6FAF7B);"></span>
+          <span>Online</span>
+        </div>
+        <button class="kisanmitra-close-btn" id="agent-chat-close-btn" aria-label="Close Chat" style="color: var(--agent-text-color, #285943);">&times;</button>
+      </div>
+    </div>
+
+    <!-- Message Timeline Body -->
+    <div class="kisanmitra-body" id="agent-chat-body" style="background: var(--agent-body-bg, #F7FBF7);">
+      <!-- Chat message items are dynamically appended via JS -->
+    </div>
+
+    <!-- Window Footer Input Panel -->
+    <div class="kisanmitra-footer" style="border-top: 1px solid var(--agent-accent-alpha, rgba(111,175,123,0.15));">
+      
+      <!-- Controls row 1: Language + Auto-speak toggle -->
+      <div class="kisanmitra-controls">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div>
+            <label for="agent-chat-lang-select" style="font-size: 10px; color: var(--text-secondary); font-weight: bold; margin-right: 4px; text-transform: uppercase;">Language:</label>
+            <select class="kisanmitra-lang-select" id="agent-chat-lang-select" style="background: var(--agent-bg-light, #EAF7EC); border-color: var(--agent-accent-alpha, rgba(111,175,123,0.2)); color: var(--agent-text-color, #285943);">
+              <option value="en" {% if user.language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+              <option value="te" {% if user.language == 'te' %}selected{% endif %}>🇮🇳 తెలుగు</option>
+              <option value="hi" {% if user.language == 'hi' %}selected{% endif %}>🇮🇳 हिन्दी</option>
+              <option value="ta" {% if user.language == 'ta' %}selected{% endif %}>🇮🇳 தமிழ்</option>
+              <option value="kn" {% if user.language == 'kn' %}selected{% endif %}>🇮🇳 ಕನ್ನಡ</option>
+              <option value="ja" {% if user.language == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+              <option value="ko" {% if user.language == 'ko' %}selected{% endif %}>🇰🇷 한국어</option>
+            </select>
+          </div>
+          <!-- Auto-speak toggle -->
+          <label class="autospeak-label" for="agent-chat-autospeak" title="Agent will read every reply aloud">
+            <input type="checkbox" id="agent-chat-autospeak" class="autospeak-checkbox" />
+            <span class="autospeak-track" style="background: var(--agent-bg-track, #D8E8DC); border-color: var(--agent-accent-alpha, rgba(111,175,123,0.25));"><span class="autospeak-thumb"></span></span>
+            <span class="autospeak-text" style="color: var(--agent-text-color, #285943);">🔊 Auto-speak</span>
+          </label>
+        </div>
+        
+        <button class="kisanmitra-clear-btn" id="agent-chat-clear-btn" style="color: #E66A6A;">
+          🗑️ Clear Chat
+        </button>
+      </div>
+
+      <!-- Text Input Form -->
+      <div class="kisanmitra-input-row">
+        <input type="text" class="kisanmitra-input-field" id="agent-chat-input-field" 
+               placeholder="Ask this agent..." autocomplete="off" style="border-color: var(--agent-accent-alpha, rgba(111,175,123,0.25)); background: var(--agent-input-bg, #F9FBF9);" />
+        <button class="kisanmitra-mic-btn" id="agent-chat-mic-btn" aria-label="Voice Input" title="Speak to Agent" style="color: var(--agent-text-color, #285943); border-color: var(--agent-accent-alpha, rgba(111,175,123,0.35)); background: var(--agent-input-bg, #F9FBF9);">🎤</button>
+        <button class="kisanmitra-send-btn" id="agent-chat-send-btn" aria-label="Send Message" style="background: var(--agent-accent, #6FAF7B);">➤</button>
+      </div>
+      
+    </div>
+
+  </div>
+</div>

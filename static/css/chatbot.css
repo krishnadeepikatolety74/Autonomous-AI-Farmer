@@ -1,0 +1,584 @@
+/* KisanMitra AI Chatbot CSS Stylesheet */
+
+/* Floating Chat Bubble Container */
+.kisanmitra-bubble-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    font-family: inherit;
+}
+
+/* Floating Chat Bubble Button */
+.kisanmitra-bubble {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #EAF7EC 0%, #DDF3E2 100%);
+    box-shadow: 0 8px 24px rgba(40, 89, 67, 0.18);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    border: 2px solid #6FAF7B;
+    animation: floatGently 3.5s ease-in-out infinite;
+}
+
+.kisanmitra-bubble:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 30px rgba(111, 175, 123, 0.35);
+    background: linear-gradient(135deg, #DDF3E2 0%, #c3f0cb 100%);
+}
+
+.kisanmitra-bubble .bubble-icon {
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Float animation */
+@keyframes floatGently {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* Chat Window Box */
+.kisanmitra-window {
+    position: fixed;
+    bottom: 115px;
+    right: 30px;
+    width: 380px;
+    max-width: calc(100vw - 60px);
+    height: 550px;
+    max-height: calc(100vh - 165px);
+    background: #FFFFFF;
+    border-radius: 22px;
+    box-shadow: 0 12px 40px rgba(40, 89, 67, 0.15);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(111, 175, 123, 0.2);
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+    pointer-events: none;
+}
+
+/* Active window visible state */
+.kisanmitra-window.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Chat Window Header */
+.kisanmitra-header {
+    background: linear-gradient(135deg, #EAF7EC 0%, #DDF3E2 100%);
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(111, 175, 123, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kisanmitra-header-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.kisanmitra-header-title h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #285943;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kisanmitra-header-title span.subtitle {
+    font-size: 11px;
+    color: #6FAF7B;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.kisanmitra-header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #285943;
+    font-weight: 600;
+    background: rgba(111, 175, 123, 0.15);
+    padding: 3px 8px;
+    border-radius: 20px;
+}
+
+.kisanmitra-header-status .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6FAF7B;
+}
+
+.kisanmitra-close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #285943;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+    width: 28px;
+    height: 28px;
+}
+
+.kisanmitra-close-btn:hover {
+    background: rgba(40, 89, 67, 0.08);
+}
+
+/* Chat messages body container */
+.kisanmitra-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #F7FBF7;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Welcome Block */
+.kisanmitra-welcome-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(111, 175, 123, 0.1);
+}
+
+.kisanmitra-welcome-card p {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: #555555;
+    line-height: 1.5;
+}
+
+/* Message Item structure */
+.chat-msg {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+    align-self: flex-start;
+}
+
+.chat-msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #DDF3E2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    border: 1px solid rgba(111, 175, 123, 0.2);
+}
+
+.chat-msg.user .chat-msg-avatar {
+    background: #285943;
+}
+
+.chat-msg-bubble {
+    background: #FFFFFF;
+    color: #333333;
+    padding: 12px 16px;
+    border-radius: 16px 16px 16px 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(111, 175, 123, 0.08);
+    position: relative;
+}
+
+.chat-msg.user .chat-msg-bubble {
+    background: #EAF7EC;
+    color: #285943;
+    border-radius: 16px 16px 4px 16px;
+    border: 1px solid rgba(111, 175, 123, 0.15);
+}
+
+/* Play button for TTS */
+.tts-play-btn {
+    background: #EAF7EC;
+    color: #285943;
+    border: 1px solid rgba(111, 175, 123, 0.25);
+    border-radius: 20px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+
+.tts-play-btn:hover {
+    background: #6FAF7B;
+    color: #FFFFFF;
+    border-color: #6FAF7B;
+}
+
+.tts-play-btn.speaking {
+    background: #FDE8E8;
+    color: #9B1C1C;
+    border-color: rgba(217, 125, 125, 0.4);
+}
+
+.tts-play-btn.speaking:hover {
+    background: #E53E3E;
+    color: #FFFFFF;
+    border-color: #E53E3E;
+}
+
+/* Rich markdown styles in chatbot bubble */
+.chat-msg-bubble p {
+    margin: 0 0 8px 0;
+}
+.chat-msg-bubble p:last-child {
+    margin-bottom: 0;
+}
+.chat-msg-bubble ul, .chat-msg-bubble ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+.chat-msg-bubble li {
+    margin-bottom: 4px;
+}
+.chat-msg-bubble strong {
+    color: #285943;
+}
+
+/* Thinking Indicator styles */
+.kisanmitra-thinking {
+    font-style: italic;
+    color: #6FAF7B;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+}
+
+.thinking-dots {
+    display: inline-flex;
+    gap: 3px;
+}
+
+.thinking-dots span {
+    width: 6px;
+    height: 6px;
+    background: #6FAF7B;
+    border-radius: 50%;
+    animation: dotsWave 1.4s infinite ease-in-out both;
+}
+
+.thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+.thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes dotsWave {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* Quick Actions Chips Grid */
+.quick-actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.quick-action-chip {
+    background: #EAF7EC;
+    color: #285943;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid rgba(111, 175, 123, 0.2);
+    transition: all 0.2s;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.quick-action-chip:hover {
+    background: #6FAF7B;
+    color: #FFFFFF;
+    border-color: #6FAF7B;
+    transform: translateY(-1px);
+}
+
+/* Chat Footer Box */
+.kisanmitra-footer {
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border-top: 1px solid rgba(111, 175, 123, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Controls layout (Language selector + Clear button) */
+.kisanmitra-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kisanmitra-lang-select {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #285943;
+    background: #EAF7EC;
+    border: 1px solid rgba(111, 175, 123, 0.2);
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    outline: none;
+}
+
+.kisanmitra-clear-btn {
+    font-size: 11.5px;
+    color: #E66A6A;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.kisanmitra-clear-btn:hover {
+    background: #FDF2F2;
+}
+
+/* Input Form Row */
+.kisanmitra-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.kisanmitra-input-field {
+    flex: 1;
+    border: 1px solid rgba(111, 175, 123, 0.25);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    outline: none;
+    background: #F9FBF9;
+    color: #333333;
+    transition: all 0.2s;
+}
+
+.kisanmitra-input-field:focus {
+    border-color: #6FAF7B;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(111, 175, 123, 0.1);
+}
+
+.kisanmitra-send-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #6FAF7B;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.kisanmitra-send-btn:hover {
+    background: #285943;
+    transform: scale(1.05);
+}
+
+/* Mobile Responsiveness Rules */
+@media (max-width: 480px) {
+    .kisanmitra-bubble-container {
+        bottom: 20px;
+        right: 20px;
+    }
+    .kisanmitra-window {
+        bottom: 90px;
+        right: 20px;
+        width: calc(100vw - 24px);
+        height: 480px;
+    }
+}
+
+/* ── Mic Button ── */
+.kisanmitra-mic-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #F7FBF7;
+    color: #285943;
+    border: 1px solid rgba(111, 175, 123, 0.35);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.kisanmitra-mic-btn:hover {
+    background: #EAF7EC;
+    border-color: #6FAF7B;
+    transform: scale(1.05);
+}
+
+/* Active / recording state */
+.kisanmitra-mic-btn.mic-active {
+    background: #FF5252;
+    border-color: #FF5252;
+    color: #FFFFFF;
+    animation: micPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(255, 82, 82, 0); }
+}
+
+/* Voice status banner that appears above input when recording */
+.voice-status-bar {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(255, 82, 82, 0.08);
+    border: 1px solid rgba(255, 82, 82, 0.2);
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: #D32F2F;
+    font-weight: 600;
+}
+
+.voice-status-bar.visible {
+    display: flex;
+}
+
+.voice-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FF5252;
+    animation: micPulse 1s infinite;
+}
+
+/* Auto-speak indicator on assistant bubbles */
+.tts-playing-btn {
+    background: #6FAF7B !important;
+    color: #FFFFFF !important;
+    border-color: #6FAF7B !important;
+}
+
+/* ── Auto-speak Toggle Switch ── */
+.autospeak-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.autospeak-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.autospeak-track {
+    width: 32px;
+    height: 18px;
+    background: #D8E8DC;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px;
+    transition: background 0.25s;
+    border: 1px solid rgba(111, 175, 123, 0.25);
+    flex-shrink: 0;
+}
+
+.autospeak-thumb {
+    width: 13px;
+    height: 13px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+}
+
+/* Checked state */
+.autospeak-checkbox:checked ~ .autospeak-track {
+    background: #6FAF7B;
+    border-color: #6FAF7B;
+}
+
+.autospeak-checkbox:checked ~ .autospeak-track .autospeak-thumb {
+    transform: translateX(14px);
+}
+
+.autospeak-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #285943;
+    white-space: nowrap;
+}
+
+.autospeak-label:hover .autospeak-track {
+    border-color: #6FAF7B;
+}

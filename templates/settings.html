@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}User Settings — AgriMitra AI{% endblock %}
+
+{% block extra_css %}
+<!-- Include quick notes and settings custom styling -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quick-notes.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}" />
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    
+    <!-- Header -->
+    <div class="dashboard-header" style="margin-bottom: var(--space-xl);">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">⚙️ {{ t('settings_title', 'User Settings & Control Center') }}</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">{{ t('settings_subtitle', 'Manage your profile account, security, localizations, and shopping quick list.') }}</p>
+      </div>
+    </div>
+
+    <!-- Alert Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 10px; max-width: 900px;">
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }}" style="padding: 12px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 500;">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- 2x2 Grid for Settings Cards -->
+    <div class="settings-grid">
+      
+      <!-- 1. Profile Card -->
+      <div class="card-no-hover settings-card">
+        <h3 class="card-header-title">👤 {{ t('profile_section', 'Profile & Account') }}</h3>
+        <p class="card-header-desc">{{ t('profile_desc', 'Update your personal profile credentials.') }}</p>
+        
+        <form method="POST" action="{{ url_for('settings.profile_update') }}">
+          <div class="form-group">
+            <label class="form-label" for="profile-name">{{ t('profile_name', 'Full Name') }}</label>
+            <input type="text" id="profile-name" name="name" class="input-field" value="{{ user.name }}" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="profile-email">{{ t('profile_email', 'Email Address') }}</label>
+            <input type="email" id="profile-email" name="email" class="input-field" value="{{ user.email }}" required />
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="margin-top: 8px;">💾 {{ t('btn_save', 'Save Changes') }}</button>
+        </form>
+      </div>
+
+      <!-- 2. Security Card -->
+      <div class="card-no-hover settings-card">
+        <h3 class="card-header-title">🔐 {{ t('security_section', 'Security & Password') }}</h3>
+        <p class="card-header-desc">{{ t('security_desc', 'Update your account login password safely.') }}</p>
+        
+        <form method="POST" action="{{ url_for('settings.password_update') }}">
+          <div class="form-group">
+            <label class="form-label" for="password-current">{{ t('security_current_pw', 'Current Password') }}</label>
+            <input type="password" id="password-current" name="current_password" class="input-field" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="password-new">{{ t('security_new_pw', 'New Password') }}</label>
+            <input type="password" id="password-new" name="new_password" class="input-field" placeholder="Min. 8 characters" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password-confirm">{{ t('security_confirm_pw', 'Confirm New Password') }}</label>
+            <input type="password" id="password-confirm" name="confirm_password" class="input-field" required />
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="margin-top: 8px;">🔒 {{ t('btn_update_password', 'Update Password') }}</button>
+        </form>
+      </div>
+
+      <!-- 3. Language & Voice Card -->
+      <div class="card-no-hover settings-card">
+        <h3 class="card-header-title">🌐 {{ t('language_section', 'Language & Voice Settings') }}</h3>
+        <p class="card-header-desc">{{ t('language_desc', 'Set localizations and auto play voice feedback settings.') }}</p>
+        
+        <form method="POST" action="{{ url_for('settings.preferences_update') }}">
+          
+          <div class="form-group">
+            <label class="form-label" for="pref-language">{{ t('language_system', 'System Language') }}</label>
+            <select id="pref-language" name="language" class="input-field" style="height: 42px; padding: 0 10px;">
+              <option value="en" {% if user.language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+              <option value="te" {% if user.language == 'te' %}selected{% endif %}>🇮🇳 తెలుగు</option>
+              <option value="hi" {% if user.language == 'hi' %}selected{% endif %}>🇮🇳 हिन्दी</option>
+              <option value="ta" {% if user.language == 'ta' %}selected{% endif %}>🇮🇳 தமிழ்</option>
+              <option value="kn" {% if user.language == 'kn' %}selected{% endif %}>🇮🇳 ಕನ್ನಡ</option>
+              <option value="ja" {% if user.language == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+              <option value="ko" {% if user.language == 'ko' %}selected{% endif %}>🇰🇷 한국어</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 18px;">
+            <label class="form-label">🌱 {{ t('language_section', 'KisanMitra AI Preferences') }}</label>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
+              
+              <!-- Voice Responses Toggle -->
+              <div class="pref-toggle-row">
+                <div>
+                  <span style="font-weight: 600; font-size: 13px; color: var(--deep-forest);">{{ t('language_voice_resp', 'Voice Responses') }}</span>
+                  <p style="font-size: 11px; color: var(--text-secondary); margin: 2px 0 0 0;">{{ t('language_voice_resp_desc', 'Allow voice answers in chat.') }}</p>
+                </div>
+                <label class="autospeak-label" for="voice-responses-chk">
+                  <input type="checkbox" id="voice-responses-chk" name="voice_responses" value="ON" class="autospeak-checkbox" {% if user.voice_responses %}checked{% endif %} />
+                  <span class="autospeak-track"><span class="autospeak-thumb"></span></span>
+                  <span class="autospeak-text" style="display:none;"></span>
+                </label>
+              </div>
+
+              <!-- Auto Play Voice Toggle -->
+              <div class="pref-toggle-row">
+                <div>
+                  <span style="font-weight: 600; font-size: 13px; color: var(--deep-forest);">{{ t('language_auto_play', 'Auto Play Voice') }}</span>
+                  <p style="font-size: 11px; color: var(--text-secondary); margin: 2px 0 0 0;">{{ t('language_auto_play_desc', 'Speak answers aloud immediately.') }}</p>
+                </div>
+                <label class="autospeak-label" for="auto-play-voice-chk">
+                  <input type="checkbox" id="auto-play-voice-chk" name="auto_play_voice" value="ON" class="autospeak-checkbox" {% if user.auto_play_voice %}checked{% endif %} />
+                  <span class="autospeak-track"><span class="autospeak-thumb"></span></span>
+                  <span class="autospeak-text" style="display:none;"></span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 18px;">
+            <label class="form-label" for="pref-voice">{{ t('language_select_voice', 'Select Supported Voice') }}</label>
+            <select id="pref-voice" name="voice" class="input-field" style="height: 42px; padding: 0 10px;">
+              <option value="Default" {% if user.voice == 'Default' or not user.voice %}selected{% endif %}>Rachel (Default Female)</option>
+              <option value="Antoni" {% if user.voice == 'Antoni' %}selected{% endif %}>Antoni (Male)</option>
+              <option value="Josh" {% if user.voice == 'Josh' %}selected{% endif %}>Josh (Deep Male)</option>
+              <option value="Bella" {% if user.voice == 'Bella' %}selected{% endif %}>Bella (Cheerful Female)</option>
+              <option value="Arnold" {% if user.voice == 'Arnold' %}selected{% endif %}>Arnold (Action Voice)</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="margin-top: 14px;">💾 {{ t('btn_update_prefs', 'Update Preferences') }}</button>
+        </form>
+      </div>
+
+      <!-- 4. Farm Quick Notes Card -->
+      {% include "components/quick_notes.html" %}
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Include script handlers for quick notes checklist -->
+<script src="{{ url_for('static', filename='js/quick-notes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

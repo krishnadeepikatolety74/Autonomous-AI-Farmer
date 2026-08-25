@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">{{ t('act_title', 'Execution Activity Logs') }}</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">{{ t('act_subtitle', 'Audited log of AI agent executions, diagnostic records and response payloads.') }}</p>
+      </div>
+    </div>
+
+    {% if farm %}
+    <div class="card-no-hover" style="margin-bottom: var(--space-xl);">
+      <h3 style="color: var(--deep-forest); margin-bottom: 16px;">{{ t('act_event_log', 'System Event Log') }}</h3>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for run in runs %}
+        <div style="padding:14px; border:1px solid rgba(0,0,0,0.05); border-radius:10px; background:var(--white); display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:16px;">🤖</span>
+              <strong style="color:var(--deep-forest);">{{ run.agent_name }}</strong>
+              <span class="badge {% if run.status == 'Completed' %}badge-green{% else %}badge-red{% endif %}">{{ run.status }}</span>
+            </div>
+            <span style="font-size:12px; color:var(--text-secondary);">⏰ {{ run.run_time }}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary);">
+            <span>{{ t('act_risk', 'Risk Level Assessed') }}: <strong>{{ run.risk_level }}</strong></span>
+            <span style="margin: 0 6px;">|</span>
+            <span>{{ t('act_confidence', 'Confidence Index') }}: <strong>{{ run.confidence }}%</strong></span>
+          </div>
+          {% if run.output_json %}
+          <details style="margin-top:6px;">
+            <summary style="font-size:11px; cursor:pointer; color:var(--primary); font-weight:600; outline:none; user-select:none;">
+              {{ t('act_payload', 'View Payload Response Data') }}
+            </summary>
+            <pre style="margin-top:6px; padding:10px; background:var(--bg); border-radius:6px; font-size:11px; font-family:monospace; overflow-x:auto; white-space:pre-wrap; word-break:break-all;">{{ run.output_json }}</pre>
+          </details>
+          {% endif %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding: 48px 24px; color:var(--text-secondary);">
+          <div style="font-size:40px; margin-bottom:12px;">⚡</div>
+          <p>{{ t('act_empty', 'No activity runs logged. Run AI orchestrations to view system logs here.') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="card-no-hover" style="text-align: center; padding: 48px 24px;">
+      <p style="color: var(--text-secondary);">{{ t('act_no_farm', 'Please set up your farm profile in the "My Farm" tab to view activity execution logs.') }}</p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

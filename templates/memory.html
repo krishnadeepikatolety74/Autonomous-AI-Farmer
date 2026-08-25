@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Farm Memory Timeline — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">{{ t('mem_title', 'Farm Memory') }}</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">{{ t('mem_subtitle', 'Historical timeline tracking AI plans, summaries and context over time.') }}</p>
+      </div>
+    </div>
+
+    {% if farm %}
+    <div class="card-no-hover" style="margin-bottom: var(--space-xl);">
+      <h3 style="color: var(--deep-forest); margin-bottom: 24px;">{{ t('mem_timeline', 'Agricultural Timeline Logs') }}</h3>
+
+      <div style="position:relative; padding-left:32px; border-left: 2px solid var(--primary); display:flex; flex-direction:column; gap:28px; margin-left: 10px;">
+        {% for mem in memories %}
+        <div style="position:relative;">
+          <!-- Node Dot Indicator -->
+          <div style="position:absolute; left:-41px; top:4px; width:16px; height:16px; border-radius:50%; background:var(--primary); border: 3px solid var(--white); box-shadow: var(--shadow-sm);"></div>
+          
+          <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">
+            📅 {{ mem.created_at }}
+          </div>
+          <div class="card-no-hover" style="padding: 16px; background: var(--bg); border: 1px solid rgba(0,0,0,0.04);">
+            <h4 style="color:var(--deep-forest); font-weight:700; margin-bottom:4px;">{{ mem.plan_summary }}</h4>
+            <p style="font-size:13px; color:var(--text); line-height: 1.5; white-space: pre-line;">{{ mem.risk_assessment }}</p>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding: 48px 24px; color:var(--text-secondary);">
+          <div style="font-size:40px; margin-bottom:12px;">🧠</div>
+          <p>{{ t('mem_empty', 'No memory snapshots logged. Farm Memory is updated automatically every time you run the Farm Coordinator Agent.') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="card-no-hover" style="text-align: center; padding: 48px 24px;">
+      <p style="color: var(--text-secondary);">{{ t('mem_no_farm', 'Please set up your farm profile in the "My Farm" tab to view memory timeline logs.') }}</p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+<!-- KisanMitra AI Chatbot Floating Container -->
+<script>
+  window.KISANMITRA_CONFIG = {
+    apiBase: "{{ config.NGROK_URL if config.CHATBOT_NGROK_ENABLED else '' }}"
+  };
+</script>
+<div class="kisanmitra-bubble-container" id="kisanmitra-container">
+  
+  <!-- Floating Circle Plant Bubble -->
+  <div class="kisanmitra-bubble" id="kisanmitra-bubble" title="KisanMitra AI">
+    <div class="bubble-icon">🌱</div>
+    <div class="bubble-label" style="position: absolute; bottom: -20px; font-size: 9px; font-weight: bold; color: var(--deep-forest); white-space: nowrap; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">KisanMitra AI</div>
+  </div>
+
+  <!-- Chat Box Window -->
+  <div class="kisanmitra-window" id="kisanmitra-window">
+    
+    <!-- Window Header -->
+    <div class="kisanmitra-header">
+      <div class="kisanmitra-header-title">
+        <h4>🌱 KisanMitra AI</h4>
+        <span class="subtitle">Your Intelligent Farm Companion</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="kisanmitra-header-status">
+          <span class="status-dot"></span>
+          <span>Online</span>
+        </div>
+        <button class="kisanmitra-close-btn" id="kisanmitra-close-btn" aria-label="Close Chat">&times;</button>
+      </div>
+    </div>
+
+    <!-- Message Timeline Body -->
+    <div class="kisanmitra-body" id="kisanmitra-body">
+      <!-- Chat message items are dynamically appended via JS -->
+    </div>
+
+    <!-- Window Footer Input Panel -->
+    <div class="kisanmitra-footer">
+      
+      <!-- Controls row 1: Language + Auto-speak toggle -->
+      <div class="kisanmitra-controls">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div>
+            <label for="kisanmitra-lang-select" style="font-size: 10px; color: var(--text-secondary); font-weight: bold; margin-right: 4px; text-transform: uppercase;">Language:</label>
+            <select class="kisanmitra-lang-select" id="kisanmitra-lang-select">
+              <option value="en" {% if user.language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+              <option value="te" {% if user.language == 'te' %}selected{% endif %}>🇮🇳 తెలుగు</option>
+              <option value="hi" {% if user.language == 'hi' %}selected{% endif %}>🇮🇳 हिन्दी</option>
+              <option value="ta" {% if user.language == 'ta' %}selected{% endif %}>🇮🇳 தமிழ்</option>
+              <option value="kn" {% if user.language == 'kn' %}selected{% endif %}>🇮🇳 ಕನ್ನಡ</option>
+              <option value="ja" {% if user.language == 'ja' %}selected{% endif %}>🇯🇵 日本語</option>
+              <option value="ko" {% if user.language == 'ko' %}selected{% endif %}>🇰🇷 한국어</option>
+            </select>
+          </div>
+          <!-- Auto-speak toggle -->
+          <label class="autospeak-label" for="kisanmitra-autospeak" title="KisanMitra will read every reply aloud">
+            <input type="checkbox" id="kisanmitra-autospeak" class="autospeak-checkbox" />
+            <span class="autospeak-track"><span class="autospeak-thumb"></span></span>
+            <span class="autospeak-text">🔊 Auto-speak</span>
+          </label>
+        </div>
+        
+        <button class="kisanmitra-clear-btn" id="kisanmitra-clear-btn">
+          🗑️ Clear Chat
+        </button>
+      </div>
+
+      <!-- Text Input Form -->
+      <div class="kisanmitra-input-row">
+        <input type="text" class="kisanmitra-input-field" id="kisanmitra-input-field" 
+               placeholder="Ask KisanMitra about your farm..." autocomplete="off" />
+        <button class="kisanmitra-mic-btn" id="kisanmitra-mic-btn" aria-label="Voice Input" title="Speak to KisanMitra">🎤</button>
+        <button class="kisanmitra-send-btn" id="kisanmitra-send-btn" aria-label="Send Message">➤</button>
+      </div>
+      
+    </div>
+
+  </div>
+</div>

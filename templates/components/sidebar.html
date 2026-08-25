@@ -1,0 +1,50 @@
+<aside class="sidebar" id="app-sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">🌿</span>
+    <span>AgriMitra AI</span>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">👨‍🌾</div>
+    <div class="user-info">
+      <div class="user-name">{{ user.name if user else 'Farm Manager' }}</div>
+      <div class="user-role">Farm Manager</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="{{ url_for('dashboard.overview') }}" class="nav-item {% if request.endpoint == 'dashboard.overview' %}active{% endif %}">
+      <span class="nav-icon">📊</span> {{ t('nav_overview', 'Overview') }}
+    </a>
+    <a href="{{ url_for('farm.farm') }}" class="nav-item {% if request.endpoint == 'farm.farm' %}active{% endif %}">
+      <span class="nav-icon">🌾</span> {{ t('my_farm', 'My Farm') }}
+    </a>
+    <a href="{{ url_for('dashboard.dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}">
+      <span class="nav-icon">📈</span> {{ t('dashboard_title', 'Dashboard') }}
+    </a>
+    <a href="{{ url_for('agents.agents_list') }}" class="nav-item {% if 'agents' in request.endpoint %}active{% endif %}">
+      <span class="nav-icon">🤖</span> {{ t('nav_agents', 'AI Agents') }}
+    </a>
+    <a href="{{ url_for('recommendations.recommendations_list') }}" class="nav-item {% if request.endpoint == 'recommendations.recommendations_list' %}active{% endif %}">
+      <span class="nav-icon">💡</span> {{ t('recommendations', 'Recommendations') }}
+    </a>
+    <a href="{{ url_for('memory.memory_list') }}" class="nav-item {% if request.endpoint == 'memory.memory_list' %}active{% endif %}">
+      <span class="nav-icon">🧠</span> {{ t('farm_memory', 'Farm Memory') }}
+    </a>
+    <a href="{{ url_for('memory.activity_list') }}" class="nav-item {% if request.endpoint == 'memory.activity_list' %}active{% endif %}">
+      <span class="nav-icon">⚡</span> {{ t('activity', 'Activity') }}
+    </a>
+    <a href="{{ url_for('chatbot.chat_page') }}" id="sidebar-kisanmitra-link" class="nav-item {% if request.endpoint == 'chatbot.chat_page' %}active{% endif %}">
+      <span class="nav-icon" style="background: rgba(111,175,123,0.12); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">🌱</span> KisanMitra AI
+    </a>
+    <a href="{{ url_for('settings.settings') }}" class="nav-item {% if request.endpoint == 'settings.settings' %}active{% endif %}">
+      <span class="nav-icon">⚙️</span> {{ t('settings', 'Settings') }}
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: var(--danger);">
+      <span class="nav-icon">🚪</span> {{ t('logout', 'Logout') }}
+    </a>
+  </div>
+</aside>

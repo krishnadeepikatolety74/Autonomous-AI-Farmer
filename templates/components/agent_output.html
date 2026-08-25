@@ -1,0 +1,57 @@
+<!-- Reusable agent output display block (used by both initial render and AJAX-rendered output) -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+
+  {% if parsed_output.summary is defined %}
+  <div>
+    <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Summary</h4>
+    <p style="font-size:15px;margin-top:4px;line-height:1.6;color:var(--text);">
+      {{ parsed_output.get('summary') or parsed_output.get('final_plan') or '—' }}
+    </p>
+  </div>
+  {% endif %}
+
+  {% if parsed_output.recommendation %}
+  <div>
+    <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Recommendation</h4>
+    <p style="font-size:14px;margin-top:4px;color:var(--primary);font-weight:600;">
+      💡 {{ parsed_output.recommendation }}
+    </p>
+  </div>
+  {% endif %}
+
+  {% set actions = parsed_output.get('actions') or parsed_output.get('priority_actions') or [] %}
+  {% if actions %}
+  <div>
+    <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Action Items</h4>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+      {% for act in actions %}
+      <div style="padding:12px;background:var(--bg);border-radius:10px;
+                  display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="flex:1;">
+          <strong style="font-size:13px;color:var(--deep-forest);">
+            {{ act.get('title') or act.get('agent') or 'Action Required' }}
+          </strong>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            {{ act.get('description', '') }}
+          </p>
+        </div>
+        {% set p = act.get('priority', 'Medium') %}
+        <span class="badge {% if p == 'High' %}badge-red{% elif p == 'Medium' %}badge-yellow{% else %}badge-green{% endif %}">
+          {{ p }}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if parsed_output.reasoning %}
+  <div>
+    <h4 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Reasoning</h4>
+    <p style="font-size:13px;color:var(--text-secondary);margin-top:4px;line-height:1.5;font-style:italic;">
+      {{ parsed_output.reasoning }}
+    </p>
+  </div>
+  {% endif %}
+
+</div>

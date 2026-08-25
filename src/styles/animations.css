@@ -1,0 +1,278 @@
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+
+/* ---- Cloud Movement ---- */
+@keyframes cloud-drift {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(calc(100vw + 100%)); }
+}
+
+@keyframes cloud-drift-reverse {
+  0%   { transform: translateX(calc(100vw + 100%)); }
+  100% { transform: translateX(-100%); }
+}
+
+.cloud {
+  position: absolute;
+  opacity: 0.6;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.cloud-1 {
+  top: 6%;
+  animation: cloud-drift 80s linear infinite;
+  opacity: 0.4;
+}
+
+.cloud-2 {
+  top: 12%;
+  animation: cloud-drift-reverse 100s linear infinite;
+  animation-delay: -20s;
+  opacity: 0.3;
+}
+
+.cloud-3 {
+  top: 3%;
+  animation: cloud-drift 120s linear infinite;
+  animation-delay: -45s;
+  opacity: 0.5;
+}
+
+.cloud-4 {
+  top: 18%;
+  animation: cloud-drift-reverse 90s linear infinite;
+  animation-delay: -60s;
+  opacity: 0.25;
+}
+
+/* Cloud Shape (CSS-only) */
+.cloud-shape {
+  width: 200px;
+  height: 60px;
+  background: white;
+  border-radius: 100px;
+  position: relative;
+  filter: blur(1px);
+}
+
+.cloud-shape::before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: white;
+  border-radius: 50%;
+  top: -40px;
+  left: 30px;
+}
+
+.cloud-shape::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  top: -30px;
+  right: 40px;
+}
+
+.cloud-shape.small {
+  width: 120px;
+  height: 36px;
+}
+
+.cloud-shape.small::before {
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 20px;
+}
+
+.cloud-shape.small::after {
+  width: 35px;
+  height: 35px;
+  top: -18px;
+  right: 25px;
+}
+
+.cloud-shape.large {
+  width: 300px;
+  height: 80px;
+}
+
+.cloud-shape.large::before {
+  width: 110px;
+  height: 110px;
+  top: -55px;
+  left: 50px;
+}
+
+.cloud-shape.large::after {
+  width: 80px;
+  height: 80px;
+  top: -40px;
+  right: 60px;
+}
+
+/* ---- Floating Leaves ---- */
+@keyframes leaf-fall {
+  0% {
+    transform: translate(0, -20px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(100px, 100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-sway {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25%      { transform: translateX(20px) rotate(10deg); }
+  50%      { transform: translateX(-10px) rotate(-5deg); }
+  75%      { transform: translateX(15px) rotate(8deg); }
+}
+
+.leaf {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+  font-size: 18px;
+  opacity: 0;
+}
+
+/* ---- Pulse Animation ---- */
+@keyframes pulse-marker {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(111, 175, 123, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(111, 175, 123, 0);
+  }
+}
+
+/* ---- Sunlight Glow ---- */
+@keyframes sunlight {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.05);
+  }
+}
+
+.sunlight {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 120, 0.3) 0%, transparent 70%);
+  animation: sunlight 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ---- Page Transition ---- */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: fade-in 0.4s var(--ease) both;
+}
+
+/* ---- Stat Counter Animation ---- */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: count-up 0.5s var(--ease) both;
+}
+
+.animate-in:nth-child(1) { animation-delay: 0.05s; }
+.animate-in:nth-child(2) { animation-delay: 0.1s; }
+.animate-in:nth-child(3) { animation-delay: 0.15s; }
+.animate-in:nth-child(4) { animation-delay: 0.2s; }
+.animate-in:nth-child(5) { animation-delay: 0.25s; }
+.animate-in:nth-child(6) { animation-delay: 0.3s; }
+
+/* ---- Hover Lift ---- */
+.hover-lift {
+  transition: var(--transition);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ---- Loading Skeleton ---- */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--pale-green) 25%, var(--soft-mint) 50%, var(--pale-green) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ---- Parallax Layers ---- */
+.parallax-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-bg {
+  transition: transform 0.1s linear;
+}
+
+/* ---- Floating Animation ---- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.floating {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ---- Drone ---- */
+@keyframes drone-fly {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(50px, -20px) rotate(5deg); }
+  50%  { transform: translate(100px, 0) rotate(0deg); }
+  75%  { transform: translate(50px, 20px) rotate(-5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.drone {
+  position: absolute;
+  font-size: 24px;
+  animation: drone-fly 15s ease-in-out infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Image Analysis — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">Crop Leaf Analysis</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">Upload leaf photographs for real-time AI-assisted disease diagnostics.</p>
+      </div>
+      {% include "components/bell_notification.html" %}
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); align-items: start; gap: var(--space-xl);">
+      
+      <!-- Upload Card -->
+      <div class="card-no-hover">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px;">📸 Submit Photo</h3>
+        
+        <form method="POST" action="{{ url_for('farm.crop_analysis') }}" enctype="multipart/form-data" id="crop-analysis-form">
+          <div style="border: 2px dashed rgba(111, 175, 123, 0.3); border-radius: 12px; padding: 30px; text-align: center; background: #FAFDFB; cursor: pointer; position: relative;" id="drop-zone">
+            <span style="font-size: 40px; display: block; margin-bottom: 12px;">🌱</span>
+            <span style="display: block; font-weight: 600; color: var(--deep-forest); margin-bottom: 6px;">Choose leaf image file</span>
+            <span style="display: block; font-size: 12px; color: var(--text-secondary);">Supports JPG, JPEG, PNG (Max 5MB)</span>
+            <input type="file" name="image" id="file-input" accept=".jpg,.jpeg,.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" required />
+          </div>
+
+          <!-- Preview Frame -->
+          <div id="preview-container" style="display: none; margin-top: 20px; text-align: center;">
+            <h4 style="margin-bottom: 10px; color: var(--deep-forest); text-align: left;">Image Preview:</h4>
+            <img id="image-preview" src="#" alt="Leaf Preview" style="max-width: 100%; max-height: 240px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);" />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; height: 46px; font-size: 15px; font-weight: 600;" id="submit-btn">
+            🔍 Analyze Crop Leaf
+          </button>
+        </form>
+      </div>
+
+      <!-- Loading State (Toggled via JS) -->
+      <div id="analysis-loading" class="card-no-hover" style="display: none; text-align: center; padding: 60px 20px;">
+        <div class="loader-circle" style="width: 48px; height: 48px; border: 4px solid rgba(111,175,123,0.1); border-left-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+        <h3 style="color: var(--deep-forest); margin-bottom: 8px;">Running Multimodal Diagnostics...</h3>
+        <p style="color: var(--text-secondary); max-width: 280px; margin: 0 auto; font-size: 13px;">Gemini is analyzing the biological crop tissue details. Please hold on.</p>
+      </div>
+
+      <!-- Results Display -->
+      {% if analysis %}
+      <div class="card-no-hover" id="analysis-results">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 10px;">📋 Diagnostic Results</h3>
+        
+        {% if analysis.error %}
+          <div style="background: #FDF2F2; border-left: 4px solid #F05252; padding: 16px; border-radius: 8px; color: #9B1C1C; margin-bottom: 16px; font-weight: 500;">
+            ⚠️ {{ analysis.error }}
+          </div>
+          <p style="color: var(--text-secondary); font-size: 13px;">Please make sure the leaf is clearly visible in the photograph and retry.</p>
+        {% else %}
+          
+          <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; flex-wrap: wrap;">
+            {% if img_src %}
+            <img src="{{ img_src }}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08);" />
+            {% endif %}
+            
+            <div style="flex: 1; min-width: 200px;">
+              <h4 style="margin: 0 0 6px 0; font-size: 18px; color: var(--deep-forest);">{{ analysis.crop }}</h4>
+              <p style="margin: 0 0 8px 0; color: #E66A6A; font-weight: 700; font-size: 15px;">{{ analysis.possible_issue }}</p>
+              
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span class="badge" style="background: {% if analysis.severity == 'High' %}#FDE8E8; color: #9B1C1C;{% elif analysis.severity == 'Medium' %}#FEF08A; color: #854D0E;{% else %}#EAF7EC; color: #285943;{% endif %} font-weight: 600; padding: 4px 10px; border-radius: 8px; font-size: 11px;">
+                  Severity: {{ analysis.severity }}
+                </span>
+                <span class="badge" style="background: rgba(111,175,123,0.1); color: var(--primary); font-weight: 600; padding: 4px 10px; border-radius: 8px; font-size: 11px;">
+                  Confidence: {{ analysis.confidence }}%
+                </span>
+                {% if analysis.health_status %}
+                <span class="badge" style="background: {% if 'Severe' in analysis.health_status %}#FDE8E8; color: #9B1C1C;{% elif 'Moderate' in analysis.health_status %}#FEF08A; color: #854D0E;{% elif 'Mild' in analysis.health_status %}#FEF9C3; color: #92400E;{% else %}#EAF7EC; color: #285943;{% endif %} font-weight: 600; padding: 4px 10px; border-radius: 8px; font-size: 11px;">
+                  {{ analysis.health_status }}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+            {% if analysis.possible_disease and analysis.possible_disease != 'No disease symptoms detected' %}
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">🦠 Possible Disease (AI Detection):</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-primary); line-height: 1.5;">{{ analysis.possible_disease }}</p>
+            </div>
+            {% endif %}
+            {% if analysis.possible_pest and analysis.possible_pest != 'No visible pest damage' %}
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">🐛 Possible Pest Damage (AI Detection):</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-primary); line-height: 1.5;">{{ analysis.possible_pest }}</p>
+            </div>
+            {% endif %}
+            {% if analysis.possible_deficiency and analysis.possible_deficiency != 'No visible deficiency signs' %}
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">🌿 Suspected Nutrient Deficiency:</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-primary); line-height: 1.5;">{{ analysis.possible_deficiency }}</p>
+            </div>
+            {% endif %}
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">Recommended Action:</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-primary); line-height: 1.5;">{{ analysis.recommended_action }}</p>
+            </div>
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">Preventive Measures:</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-primary); line-height: 1.5;">{{ analysis.prevention }}</p>
+            </div>
+            <div>
+              <strong style="color: var(--deep-forest); display: block; font-size: 13px; margin-bottom: 4px;">Explainable AI Reasoning:</strong>
+              <p style="margin: 0; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">{{ analysis.reasoning }}</p>
+            </div>
+          </div>
+
+          <div style="background: rgba(111, 175, 123, 0.05); border: 1px solid rgba(111, 175, 123, 0.15); border-radius: 10px; padding: 12px 16px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.5;">
+            ℹ️ <strong>AI Advisory Statement:</strong> Crop leaf analysis outputs are calculated using generative pattern evaluations. They should be verified in the field and are not a guaranteed phytosanitary diagnostic confirmation.
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/crop-analysis.js') }}"></script>
+{% endblock %}

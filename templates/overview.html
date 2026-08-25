@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Overview — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+  
+  <div class="dashboard-content">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">
+          {{ farm.name if farm else t('overview_my_smart_farm', 'My Smart Farm') }}
+        </h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">
+          {% if farm %}
+            📍 {{ farm.location }} | Area: {{ farm.area }} acres | Soil: {{ farm.soil_type }}
+          {% else %}
+            {{ t('overview_setup_prompt_short', 'Set up your farm profile under the "My Farm" tab to start AI analysis.') }}
+          {% endif %}
+        </p>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 12px;">
+        {% if not farm %}
+        <a href="{{ url_for('farm.farm') }}" class="btn btn-primary">
+          🌱 {{ t('overview_btn_setup_farm', 'Setup Farm Profile') }}
+        </a>
+        {% else %}
+        <form method="POST" action="{{ url_for('agents.run_all_agents') }}" style="display: inline; margin: 0;">
+          <button type="submit" class="btn btn-primary">
+            🔄 {{ t('overview_btn_run_ai', 'Run AI Orchestration') }}
+          </button>
+        </form>
+        {% endif %}
+        {% include "components/bell_notification.html" %}
+      </div>
+    </div>
+
+    {% if farm %}
+    <!-- Quick Stats -->
+    <div class="section" style="margin-bottom: var(--space-xl);">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('overview_health_summary', 'Farm Health Summary') }}</h3>
+        <span class="badge badge-green">{{ t('overview_all_active', 'All Systems Active') }}</span>
+      </div>
+
+      <div class="stats-grid stats-grid-4">
+        <!-- Farm Health -->
+        <div class="stat-card hover-lift">
+          <span class="stat-label">{{ t('overview_overall_health', 'Overall Farm Health') }}</span>
+          {% if observation %}
+            <span class="stat-value" style="color: var(--primary);">{{ observation.crop_health }}%</span>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {{ observation.crop_health }}%;"></div>
+            </div>
+            <span class="badge badge-green" style="align-self: flex-start; margin-top: 4px;">
+              {% if observation.crop_health >= 80 %}{{ t('overview_health_good', 'Good') }}{% elif observation.crop_health >= 50 %}{{ t('overview_health_fair', 'Fair') }}{% else %}{{ t('overview_health_critical', 'Critical') }}{% endif %}
+            </span>
+          {% else %}
+            <span class="stat-value" style="color: var(--primary);">--%</span>
+            <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+            <span class="badge badge-yellow" style="align-self: flex-start; margin-top: 4px;">{{ t('overview_no_data', 'No Data') }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Soil Moisture -->
+        <div class="stat-card hover-lift">
+          <span class="stat-label">{{ t('overview_soil_moisture', 'Soil Moisture') }}</span>
+          {% if observation %}
+            <span class="stat-value" style="color: var(--primary);">{{ observation.soil_moisture }}%</span>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {{ observation.soil_moisture }}%;"></div>
+            </div>
+            <span class="badge badge-green" style="align-self: flex-start; margin-top: 4px;">
+              {% if 40 <= observation.soil_moisture <= 75 %}{{ t('overview_moisture_optimal', 'Optimal') }}{% else %}{{ t('overview_moisture_irrigate', 'Irrigate') }}{% endif %}
+            </span>
+          {% else %}
+            <span class="stat-value">--%</span>
+            <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+            <span class="badge badge-yellow" style="align-self: flex-start; margin-top: 4px;">{{ t('overview_no_data', 'No Data') }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Water Efficiency / Temperature -->
+        <div class="stat-card hover-lift">
+          <span class="stat-label">{{ t('overview_temp_humidity', 'Temperature & Humidity') }}</span>
+          {% if observation %}
+            <span class="stat-value" style="color: var(--blue-weather);">{{ observation.temperature }}°C</span>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {{ observation.humidity }}%; background: var(--blue-weather);"></div>
+            </div>
+            <span class="badge badge-blue" style="align-self: flex-start; margin-top: 4px;">RH: {{ observation.humidity }}%</span>
+          {% else %}
+            <span class="stat-value">--°C</span>
+            <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+            <span class="badge badge-yellow" style="align-self: flex-start; margin-top: 4px;">{{ t('overview_no_data', 'No Data') }}</span>
+          {% endif %}
+        </div>
+
+        <!-- AI Runs -->
+        <div class="stat-card hover-lift">
+          <span class="stat-label">{{ t('overview_ai_run_status', 'AI Agent Run Status') }}</span>
+          <span class="stat-value">{{ t('overview_active', 'Active') }}</span>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 100%;"></div>
+          </div>
+          <span class="badge badge-green" style="align-self: flex-start; margin-top: 4px;">{{ t('overview_agents_online', '7 Agents Online') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop & Active Details -->
+    <div class="section" style="margin-bottom: var(--space-xl);">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('overview_crop_performance', 'Crop Performance') }}</h3>
+      </div>
+ 
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        {% if crop %}
+        <div class="card hover-lift">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: var(--soft-mint); display: flex; align-items: center; justify-content: center; font-size: 24px;">🌾</div>
+            <div>
+              <h4 style="font-weight: 700; color: var(--deep-forest);">{{ crop.name }}</h4>
+              <p style="font-size: 12px; color: var(--text-secondary);">{{ t('overview_variety', 'Variety') }}: {{ crop.variety }}</p>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 13px; color: var(--text-secondary);">{{ t('overview_growth_stage', 'Growth Stage') }}</span>
+            <span class="badge badge-green">{{ crop.stage }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-size: 13px; color: var(--text-secondary);">{{ t('overview_planting_date', 'Planting Date') }}</span>
+            <span style="font-size: 14px; font-weight: 600; color: var(--primary);">{{ crop.planting_date }}</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="card hover-lift">
+          <p>{{ t('overview_no_crops', 'No crops registered yet. Set up crop registration in "My Farm" profile settings.') }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    <div class="section" style="margin-bottom: var(--space-xl);">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('overview_active_recs', 'Active AI Recommendations') }}</h3>
+        <a href="{{ url_for('recommendations.recommendations_list') }}" class="btn btn-sm btn-outline">{{ t('overview_view_all_complete', 'View All & Complete →') }}</a>
+      </div>
+ 
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for rec in recommendations %}
+        <div class="card-no-hover" style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 42px; height: 42px; border-radius: 12px; background: var(--soft-mint); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+            {% if rec.agent_name == 'Weather Agent' %}🌦️
+            {% elif rec.agent_name == 'Soil Agent' %}🌱
+            {% elif rec.agent_name == 'Crop Disease Agent' %}🌾
+            {% elif rec.agent_name == 'Irrigation Agent' %}💧
+            {% elif rec.agent_name == 'Fertilizer Agent' %}🧪
+            {% elif rec.agent_name == 'Market Agent' %}📈
+            {% else %}🧠
+            {% endif %}
+          </div>
+          <div style="flex: 1;">
+            <h4 style="margin-bottom: 2px; color: var(--deep-forest);">{{ rec.title }}</h4>
+            <p style="font-size: 12px; color: var(--text-secondary);">{{ rec.description }}</p>
+          </div>
+          <span class="badge badge-green">{{ rec.agent_name }}</span>
+          <span class="badge {% if rec.priority == 'High' %}badge-yellow{% else %}badge-green{% endif %}">{{ rec.priority }}</span>
+          
+          <form method="POST" action="{{ url_for('recommendations.mark_complete', rec_id=rec.id) }}">
+            <button type="submit" class="btn btn-sm btn-outline">{{ t('overview_complete', 'Complete') }}</button>
+          </form>
+        </div>
+        {% else %}
+        <div class="card-no-hover" style="text-align: center; padding: var(--space-xl);">
+          <p style="color: var(--text-secondary);">{{ t('overview_no_recs', 'No active recommendations. Click "Run AI Orchestration" to scan your telemetry.') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    {% else %}
+    <!-- Farm Setup Prompt -->
+    <div class="card-no-hover" style="text-align: center; padding: 48px 24px;">
+      <div style="font-size: 48px; margin-bottom: 16px;">🌾</div>
+      <h3 style="color: var(--deep-forest); margin-bottom: 8px;">{{ t('overview_welcome_title', 'Welcome to AgriMitra AI!') }}</h3>
+      <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 24px;">
+        {{ t('overview_welcome_desc', 'To unlock real-time recommendations, disease alerts, irrigation planning and N-P-K chemical diagnostics, tell us a bit about your farm.') }}
+      </p>
+      <a href="{{ url_for('farm.farm') }}" class="btn btn-primary">{{ t('overview_btn_setup_now', 'Setup My Farm Profile Now') }}</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

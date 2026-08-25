@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Farm Health Trends — AgriMitra AI{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+  {% include "components/sidebar.html" %}
+
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--deep-forest);">Telemetry Analytics & Trends</h1>
+        <p style="color: var(--text-secondary); margin-top: 4px;">Longitudinal visualization of soil, crop health, and climate parameter variations.</p>
+      </div>
+      {% include "components/bell_notification.html" %}
+    </div>
+
+    {% if observations|length < 2 %}
+    <div class="card-no-hover" style="text-align: center; padding: 60px 20px; max-width: 600px; margin: 40px auto;">
+      <span style="font-size: 48px; display: block; margin-bottom: 16px;">📈</span>
+      <h3 style="color: var(--deep-forest); margin-bottom: 8px;">Not enough historical data yet</h3>
+      <p style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.5; margin-bottom: 20px;">
+        To generate trends, we require at least 2 daily observations. Please log telemetry parameters under the "My Farm" observation form first.
+      </p>
+      <a href="{{ url_for('farm.farm') }}" class="btn btn-primary">🌾 Go to My Farm</a>
+    </div>
+    {% else %}
+    
+    <!-- Chart Grid -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-xl);">
+      
+      <!-- Chart 1: Soil Moisture & Crop Health -->
+      <div class="card-no-hover">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px;">🌿 Crop Health & Soil Moisture (%)</h3>
+        <div style="position: relative; height: 280px; width: 100%;">
+          <canvas id="moistureHealthChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Soil N-P-K Nutrients -->
+      <div class="card-no-hover">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px;">🧪 Nitrogen, Phosphorus & Potassium (kg/ha)</h3>
+        <div style="position: relative; height: 280px; width: 100%;">
+          <canvas id="nutrientsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Temperature & Rainfall -->
+      <div class="card-no-hover">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px;">🌦️ Temperature (°C) & Rainfall (mm)</h3>
+        <div style="position: relative; height: 280px; width: 100%;">
+          <canvas id="climateChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 4: Soil pH & Market Price -->
+      <div class="card-no-hover">
+        <h3 style="color: var(--deep-forest); margin-bottom: 16px;">💰 Mandi Market Price (INR/q)</h3>
+        <div style="position: relative; height: 280px; width: 100%;">
+          <canvas id="marketChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if observations|length >= 2 %}
+<!-- Load Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Prepare raw python variables for JS parsing
+    const labels = [];
+    const moistureData = [];
+    const healthData = [];
+    const nData = [];
+    const pData = [];
+    const kData = [];
+    const tempData = [];
+    const rainData = [];
+    const phData = [];
+    const priceData = [];
+
+    {% for obs in observations %}
+        // Format timestamp safely
+        labels.push("{{ obs.observed_at[:10] }}");
+        moistureData.push({{ obs.soil_moisture }});
+        healthData.push({{ obs.crop_health }});
+        nData.push({{ obs.nitrogen }});
+        pData.push({{ obs.phosphorus }});
+        kData.push({{ obs.potassium }});
+        tempData.push({{ obs.temperature }});
+        rainData.push({{ obs.rainfall }});
+        phData.push({{ obs.soil_ph }});
+        priceData.push({{ obs.market_price }});
+    {% endfor %}
+
+    // Chart.js Theme Configurations
+    const primaryGreen = "#6FAF7B";
+    const deepForest = "#285943";
+    const redAlert = "#E66A6A";
+    const yellowWarning = "#F1C40F";
+    const skyBlue = "#3498DB";
+
+    // Chart 1: Moisture & Health
+    new Chart(document.getElementById("moistureHealthChart").getContext("2d"), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Crop Health Index (%)',
+                    data: healthData,
+                    borderColor: deepForest,
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    tension: 0.2
+                },
+                {
+                    label: 'Soil Moisture (%)',
+                    data: moistureData,
+                    borderColor: primaryGreen,
+                    backgroundColor: 'rgba(111, 175, 123, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 100 }
+            }
+        }
+    });
+
+    // Chart 2: Nutrients (N-P-K)
+    new Chart(document.getElementById("nutrientsChart").getContext("2d"), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Nitrogen (N)',
+                    data: nData,
+                    backgroundColor: 'rgba(40, 89, 67, 0.8)',
+                    borderColor: deepForest,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Phosphorus (P)',
+                    data: pData,
+                    backgroundColor: 'rgba(111, 175, 123, 0.8)',
+                    borderColor: primaryGreen,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Potassium (K)',
+                    data: kData,
+                    backgroundColor: 'rgba(230, 106, 106, 0.8)',
+                    borderColor: redAlert,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Chart 3: Climate (Temp & Rain)
+    new Chart(document.getElementById("climateChart").getContext("2d"), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: tempData,
+                    borderColor: yellowWarning,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.1
+                },
+                {
+                    label: 'Rainfall (mm)',
+                    data: rainData,
+                    type: 'bar',
+                    backgroundColor: 'rgba(52, 152, 219, 0.5)',
+                    borderColor: skyBlue,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Chart 4: Market Price
+    new Chart(document.getElementById("marketChart").getContext("2d"), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Market Price (INR/q)',
+                    data: priceData,
+                    borderColor: primaryGreen,
+                    backgroundColor: 'rgba(111,175,123,0.05)',
+                    borderWidth: 2,
+                    tension: 0.2,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
